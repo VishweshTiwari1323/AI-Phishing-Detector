@@ -24,16 +24,31 @@ with open(MODEL_PATH, "rb") as f:
 
 # ---------------- VIRUSTOTAL API ----------------
 
-# Add this key in Vercel Environment Variables
-VT_API_KEY = os.environ.get("b91d175a771c3f5820804894c6bc7f6d70a3584e2260e44b1d03abba081192ee")
+# Vercel Environment Variable
+# Name: VT_API_KEY
+VT_API_KEY = os.environ.get(
+    "VT_API_KEY",
+    "b91d175a771c3f5820804894c6bc7f6d70a3584e2260e44b1d03abba081192ee"
+)
 
 
 def check_virustotal(url):
+
+    if not VT_API_KEY:
+        return {
+            "status": "VirusTotal API Key Missing",
+            "malicious": 0,
+            "suspicious": 0,
+            "harmless": 0,
+            "undetected": 0,
+        }
+
     headers = {
         "x-apikey": VT_API_KEY
     }
 
     try:
+
         url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
 
         response = requests.get(
@@ -42,7 +57,7 @@ def check_virustotal(url):
             timeout=10
         )
 
-        # If URL hasn't been scanned before, submit it first
+        # URL not scanned before
         if response.status_code == 404:
 
             requests.post(
@@ -56,15 +71,18 @@ def check_virustotal(url):
                 "status": "Submitted for scanning",
                 "malicious": 0,
                 "suspicious": 0,
-                "harmless": 0
+                "harmless": 0,
+                "undetected": 0,
             }
 
         if response.status_code != 200:
+
             return {
                 "status": "VirusTotal Error",
                 "malicious": 0,
                 "suspicious": 0,
-                "harmless": 0
+                "harmless": 0,
+                "undetected": 0,
             }
 
         data = response.json()
@@ -76,15 +94,17 @@ def check_virustotal(url):
             "malicious": stats.get("malicious", 0),
             "suspicious": stats.get("suspicious", 0),
             "harmless": stats.get("harmless", 0),
-            "undetected": stats.get("undetected", 0)
+            "undetected": stats.get("undetected", 0),
         }
 
     except Exception as e:
+
         return {
             "status": str(e),
             "malicious": 0,
             "suspicious": 0,
-            "harmless": 0
+            "harmless": 0,
+            "undetected": 0,
         }
 
 
@@ -119,7 +139,7 @@ def scan():
         # Remove http:// https:// www.
         cleaned_url = re.sub(r"^https?://(www\.)?", "", url)
 
-        # ---------- ML Prediction ----------
+        # ML Prediction
 
         prediction = model.predict(
             vector.transform([cleaned_url])
@@ -134,7 +154,7 @@ def scan():
         else:
             predict = "Unknown"
 
-        # ---------- VirusTotal ----------
+        # VirusTotal
 
         vt = check_virustotal(url)
 
@@ -144,6 +164,9 @@ def scan():
 
         if vt["status"] == "Submitted for scanning":
             vt_result = "URL submitted to VirusTotal. Try again in a few seconds."
+
+        elif vt["status"] == "VirusTotal API Key Missing":
+            vt_result = "VirusTotal API key is not configured."
 
         elif malicious > 0:
             vt_result = "⚠️ Malicious"
