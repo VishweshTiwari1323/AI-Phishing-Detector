@@ -25,7 +25,7 @@ with open(MODEL_PATH, "rb") as f:
 # ---------------- VIRUSTOTAL API ----------------
 
 # Add this key in Vercel Environment Variables
-VT_API_KEY = os.environ.get("VT_API_KEY")
+VT_API_KEY = os.environ.get("b91d175a771c3f5820804894c6bc7f6d70a3584e2260e44b1d03abba081192ee")
 
 
 def check_virustotal(url):
