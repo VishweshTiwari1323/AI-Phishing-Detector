@@ -5,6 +5,7 @@ import requests
 import base64
 import os
 
+
 app = Flask(__name__)
 
 # ---------------- BASE DIRECTORY ----------------
@@ -41,6 +42,7 @@ def check_virustotal(url):
             "suspicious": 0,
             "harmless": 0,
             "undetected": 0,
+            "vendors": {}
         }
 
     headers = {
@@ -73,6 +75,7 @@ def check_virustotal(url):
                 "suspicious": 0,
                 "harmless": 0,
                 "undetected": 0,
+                "vendors": {}
             }
 
         if response.status_code != 200:
@@ -83,11 +86,14 @@ def check_virustotal(url):
                 "suspicious": 0,
                 "harmless": 0,
                 "undetected": 0,
+                "vendors": {}
             }
 
         data = response.json()
 
-        stats = data["data"]["attributes"]["last_analysis_stats"]
+        attributes = data.get("data", {}).get("attributes", {})
+        stats = attributes.get("last_analysis_stats", {})
+        vendors = attributes.get("last_analysis_results", {})
 
         return {
             "status": "Success",
@@ -95,6 +101,7 @@ def check_virustotal(url):
             "suspicious": stats.get("suspicious", 0),
             "harmless": stats.get("harmless", 0),
             "undetected": stats.get("undetected", 0),
+            "vendors": vendors
         }
 
     except Exception as e:
@@ -105,6 +112,7 @@ def check_virustotal(url):
             "suspicious": 0,
             "harmless": 0,
             "undetected": 0,
+            "vendors": {}
         }
 
 
@@ -131,6 +139,7 @@ def scan():
     malicious = 0
     suspicious = 0
     harmless = 0
+    vendors = {}
 
     if request.method == "POST":
 
@@ -161,6 +170,7 @@ def scan():
         malicious = vt["malicious"]
         suspicious = vt["suspicious"]
         harmless = vt["harmless"]
+        vendors = vt.get("vendors", {})
 
         if vt["status"] == "Submitted for scanning":
             vt_result = "URL submitted to VirusTotal. Try again in a few seconds."
@@ -184,7 +194,8 @@ def scan():
         vt_result=vt_result,
         malicious=malicious,
         suspicious=suspicious,
-        harmless=harmless
+        harmless=harmless,
+        vendors=vendors
     )
 
 
