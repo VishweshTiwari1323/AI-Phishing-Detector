@@ -1,8 +1,6 @@
 import base64
 import logging
 import os
-import pickle
-import re
 from urllib.parse import urlparse
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
@@ -13,20 +11,24 @@ import requests
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-
-# ---------------- CONFIGURATION & DATABASE SETUP ----------------
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-insecure-key-change-me"
 )
+
 database_url = os.environ.get("DATABASE_URL", None)
 if database_url:
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
+    # Skip local SQLite on Vercel (filesystem is read-only in serverless)
+    # Use hosted DB (Supabase, Neon, MongoDB Atlas) for production deployment
+    if os.environ.get("VERCEL"):
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -35,167 +37,11 @@ db.init_app(app)
 
 # Create tables only if not already created (for local development)
 # In Vercel serverless, we skip db.create_all() to avoid filesystem issues
-# Tables should be created via migration or initial setup script
 if not os.environ.get("VERCEL"):
     with app.app_context():
         db.create_all()
 
 app.jinja_env.globals["hasattr"] = hasattr
-
-# ---------------- MODEL LOADING ----------------
-
-VECTORIZER_PATH = os.path.join(BASE_DIR, "vectorizer.pkl")
-MODEL_PATH = os.path.join(BASE_DIR, "phishing.pkl")
-
-vector = None
-model = None
-
-try:
-    if os.path.exists(VECTORIZER_PATH) and os.path.exists(MODEL_PATH):
-        with open(VECTORIZER_PATH, "rb") as f:
-            vector = pickle.load(f)
-        with open(MODEL_PATH, "rb") as f:
-            model = pickle.load(f)
-        logger.info("ML models loaded successfully.")
-    else:
-        logger.warning("Model or vectorizer file not found.")
-except Exception as e:
-    logger.error(f"Failed to load ML models: {e}")
-
-# ---------------- VIRUSTOTAL CONFIGURATION ----------------
-
-VT_API_KEY = os.environ.get(
-    "VT_API_KEY",
-    "b91d175a771c3f5820804894c6bc7f6d70a3584e2260e44b1d03abba081192ee",
-).strip()
-
-# ---------------- HELPER UTILITIES ----------------
-
-
-def validate_url(url: str):
-    """Validates and formats the input URL."""
-    if not url or len(url.strip()) < 4:
-        return False, "URL is too short"
-
-    url = url.strip()
-    if not url.startswith(("http://", "https://")):
-        url = "https://" + url
-
-    try:
-        parsed = urlparse(url)
-        if not parsed.scheme or not parsed.netloc:
-            return False, "Invalid URL structure"
-        return True, url
-    except Exception:
-        return False, "Invalid URL format"
-
-
-def perform_ml_prediction(cleaned_url: str):
-    """Performs inference using the loaded Vectorizer and ML Model."""
-    if not model or not vector:
-        return "Model not loaded", 0.0
-
-    try:
-        transformed_url = vector.transform([cleaned_url])
-        prediction = model.predict(transformed_url)[0]
-
-        if hasattr(model, "predict_proba"):
-            probabilities = model.predict_proba(transformed_url)[0]
-            confidence = float(max(probabilities))
-        else:
-            confidence = 1.0
-
-        pred_str = str(prediction).strip().lower()
-        if pred_str in ("bad", "1", "phishing", "malicious"):
-            return "Phishing Website", confidence
-        elif pred_str in ("good", "0", "safe", "benign"):
-            return "Safe Website", confidence
-        return "Unknown", confidence
-    except Exception as e:
-        logger.error(f"ML Prediction error: {e}")
-        return "Error", 0.0
-
-
-def check_virustotal(url: str):
-    """Queries the VirusTotal API v3 for URL telemetry."""
-    empty_result = {
-        "status": "VirusTotal API Key Missing" if not VT_API_KEY else "Error",
-        "malicious": 0,
-        "suspicious": 0,
-        "harmless": 0,
-        "undetected": 0,
-        "vendors": {},
-    }
-
-    if not VT_API_KEY:
-        return empty_result
-
-    headers = {"x-apikey": VT_API_KEY}
-
-    try:
-        url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
-        response = requests.get(
-            f"https://www.virustotal.com/api/v3/urls/{url_id}",
-            headers=headers,
-            timeout=6,
-        )
-
-        if response.status_code == 404:
-            requests.post(
-                "https://www.virustotal.com/api/v3/urls",
-                headers=headers,
-                data={"url": url},
-                timeout=6,
-            )
-            empty_result["status"] = "Submitted for scanning"
-            return empty_result
-
-        if response.status_code != 200:
-            empty_result["status"] = f"VirusTotal Error: {response.status_code}"
-            return empty_result
-
-        data = response.json()
-        attributes = data.get("data", {}).get("attributes", {})
-        stats = attributes.get("last_analysis_stats", {})
-        vendors = attributes.get("last_analysis_results", {})
-
-        return {
-            "status": "Success",
-            "malicious": stats.get("malicious", 0),
-            "suspicious": stats.get("suspicious", 0),
-            "harmless": stats.get("harmless", 0),
-            "undetected": stats.get("undetected", 0),
-            "vendors": vendors,
-        }
-    except requests.exceptions.Timeout:
-        empty_result["status"] = "Request timeout"
-        return empty_result
-    except Exception as e:
-        empty_result["status"] = f"Error: {str(e)}"
-        return empty_result
-
-
-def evaluate_vt_result(vt_data: dict):
-    """Generates standardized verdict labels from VirusTotal responses."""
-    status = vt_data.get("status")
-    if status == "Submitted for scanning":
-        return "URL submitted to VirusTotal. Try again in a few seconds."
-    if status == "VirusTotal API Key Missing":
-        return "VirusTotal API key is not configured."
-    if status and ("Error" in status or status == "Request timeout"):
-        return f"⚠️ {status}"
-
-    malicious = vt_data.get("malicious", 0)
-    suspicious = vt_data.get("suspicious", 0)
-
-    if malicious > 0:
-        return "⚠️ Malicious"
-    if suspicious > 0:
-        return "⚠️ Suspicious"
-    return "✅ Safe"
-
-
-# ---------------- ROUTE HANDLERS ----------------
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -229,14 +75,6 @@ def scan():
             url = validated_url
             cleaned_url = re.sub(r"^https?://(www\.)?", "", url)
 
-            ml_result, confidence = perform_ml_prediction(cleaned_url)
-            if ml_result == "Phishing Website":
-                predict_ui = "⚠️ Phishing Website"
-            elif ml_result == "Safe Website":
-                predict_ui = "✅ Safe Website"
-            else:
-                predict_ui = "⚠️ Unknown"
-
             vt = check_virustotal(url)
             malicious = vt.get("malicious", 0)
             suspicious = vt.get("suspicious", 0)
@@ -244,23 +82,27 @@ def scan():
             vendors = vt.get("vendors", {})
             vt_result = evaluate_vt_result(vt)
 
-            # Persist single scan
-            try:
-                scan_record = ScanHistory(
-                    url=url,
-                    cleaned_url=cleaned_url,
-                    ml_prediction=ml_result,
-                    vt_result=vt_result,
-                    vt_malicious=malicious,
-                    vt_suspicious=suspicious,
-                    vt_harmless=harmless,
-                    ip_address=request.remote_addr,
-                )
-                db.session.add(scan_record)
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Database write failed: {e}")
+            # Note: ML prediction skipped on Vercel (no local model files)
+            # prediction only via VirusTotal API
+
+            # Persist scan (skip on Vercel - serverless filesystem is read-only)
+            if not os.environ.get("VERCEL"):
+                try:
+                    scan_record = ScanHistory(
+                        url=url,
+                        cleaned_url=cleaned_url,
+                        ml_prediction="Model unavailable (Vercel serverless)",
+                        vt_result=vt_result,
+                        vt_malicious=malicious,
+                        vt_suspicious=suspicious,
+                        vt_harmless=harmless,
+                        ip_address=request.remote_addr,
+                    )
+                    db.session.add(scan_record)
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"Database write failed: {e}")
         else:
             flash(validated_url, "danger")
 
@@ -305,47 +147,31 @@ def batch_scan():
                 continue
 
             cleaned_url = re.sub(r"^https?://(www\.)?", "", validated_url)
-            ml_result, confidence = perform_ml_prediction(cleaned_url)
             vt = check_virustotal(validated_url)
             vt_result = evaluate_vt_result(vt)
             malicious_count = vt.get("malicious", 0)
             suspicious_count = vt.get("suspicious", 0)
             harmless_count = vt.get("harmless", 0)
 
-            # Persist each batch scan to history
-            try:
-                scan_record = ScanHistory(
-                    url=validated_url,
-                    cleaned_url=cleaned_url,
-                    ml_prediction=ml_result,
-                    vt_result=vt_result,
-                    vt_malicious=malicious_count,
-                    vt_suspicious=suspicious_count,
-                    vt_harmless=harmless_count,
-                    ip_address=request.remote_addr,
-                )
-                db.session.add(scan_record)
-            except Exception as e:
-                logger.error(f"Error prepping batch record: {e}")
-
             results.append(
                 {
                     "url": validated_url,
                     "status": "Success",
-                    "prediction": ml_result,
-                    "confidence": confidence,
+                    "prediction": "VT-only scan",
+                    "confidence": 0.0,
                     "vt_result": vt_result,
                     "vt_malicious": malicious_count,
                     "vt_suspicious": suspicious_count,
                 }
             )
 
-        # Commit all batch records in a single transaction
-        try:
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Failed to commit batch scans: {e}")
+        # Commit batch records (skip on Vercel)
+        if not os.environ.get("VERCEL"):
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Failed to commit batch scans: {e}")
 
     return render_template(
         "batch_scan_refactored.html", form=form, results=results
@@ -410,7 +236,9 @@ def api_scan():
     """API endpoint for scanning a single URL.
 
     Expects JSON body: {"url": "https://example.com"}
-    Returns JSON with ML prediction, VirusTotal results, and saved scan record ID.
+    Returns JSON with VirusTotal results.
+    ML prediction is handled via VirusTotal API; local model inference
+    is skipped in Vercel serverless environment.
     """
     if not request.is_json:
         return jsonify({"error": "Missing JSON body"}), 400
@@ -428,14 +256,6 @@ def api_scan():
 
     cleaned_url = re.sub(r"^https?://(www\.)?", "", validated_url)
 
-    ml_result, confidence = perform_ml_prediction(cleaned_url)
-    if ml_result == "Phishing Website":
-        predict_ui = "Phishing Website"
-    elif ml_result == "Safe Website":
-        predict_ui = "Safe Website"
-    else:
-        predict_ui = "Unknown"
-
     vt = check_virustotal(validated_url)
     vt_result = evaluate_vt_result(vt)
     malicious = vt.get("malicious", 0)
@@ -443,32 +263,33 @@ def api_scan():
     harmless = vt.get("harmless", 0)
     undetected = vt.get("undetected", 0)
 
-    # Persist API scan to database
+    # Persist API scan to database (skip on Vercel - serverless filesystem is read-only)
     scan_id = None
-    try:
-        scan_record = ScanHistory(
-            url=validated_url,
-            cleaned_url=cleaned_url,
-            ml_prediction=ml_result,
-            vt_result=vt_result,
-            vt_malicious=malicious,
-            vt_suspicious=suspicious,
-            vt_harmless=harmless,
-            vt_undetected=undetected,
-            ip_address=request.remote_addr,
-        )
-        db.session.add(scan_record)
-        db.session.commit()
-        scan_id = scan_record.id
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"API scan database write failed: {e}")
+    if not os.environ.get("VERCEL"):
+        try:
+            scan_record = ScanHistory(
+                url=validated_url,
+                cleaned_url=cleaned_url,
+                ml_prediction="VT-only scan",
+                vt_result=vt_result,
+                vt_malicious=malicious,
+                vt_suspicious=suspicious,
+                vt_harmless=harmless,
+                vt_undetected=undetected,
+                ip_address=request.remote_addr,
+            )
+            db.session.add(scan_record)
+            db.session.commit()
+            scan_id = scan_record.id
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"API scan database write failed: {e}")
 
     return jsonify(
         {
             "url": validated_url,
-            "ml_prediction": predict_ui,
-            "confidence": confidence,
+            "ml_prediction": "VT-only scan",
+            "confidence": 0.0,
             "virustotal": {
                 "status": vt.get("status", "Error"),
                 "malicious": malicious,
@@ -479,6 +300,105 @@ def api_scan():
             "scan_id": scan_id,
         }
     )
+
+
+def validate_url(url: str):
+    """Validates and formats the input URL."""
+    if not url or len(url.strip()) < 4:
+        return False, "URL is too short"
+
+    url = url.strip()
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            return False, "Invalid URL structure"
+        return True, url
+    except Exception:
+        return False, "Invalid URL format"
+
+
+def check_virustotal(url: str):
+    """Queries the VirusTotal API v3 for URL telemetry."""
+    empty_result = {
+        "status": "VirusTotal API Key Missing" if not os.environ.get("VT_API_KEY") else "Error",
+        "malicious": 0,
+        "suspicious": 0,
+        "harmless": 0,
+        "undetected": 0,
+        "vendors": {},
+    }
+
+    if not os.environ.get("VT_API_KEY"):
+        return empty_result
+
+    VT_API_KEY = os.environ.get("VT_API_KEY").strip()
+
+    headers = {"x-apikey": VT_API_KEY}
+
+    try:
+        url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
+        response = requests.get(
+            f"https://www.virustotal.com/api/v3/urls/{url_id}",
+            headers=headers,
+            timeout=6,
+        )
+
+        if response.status_code == 404:
+            requests.post(
+                "https://www.virustotal.com/api/v3/urls",
+                headers=headers,
+                data={"url": url},
+                timeout=6,
+            )
+            empty_result["status"] = "Submitted for scanning"
+            return empty_result
+
+        if response.status_code != 200:
+            empty_result["status"] = f"VirusTotal Error: {response.status_code}"
+            return empty_result
+
+        data = response.json()
+        attributes = data.get("data", {}).get("attributes", {})
+        stats = attributes.get("last_analysis_stats", {})
+        vendors = attributes.get("last_analysis_results", {})
+
+        return {
+            "status": "Success",
+            "malicious": stats.get("malicious", 0),
+            "suspicious": stats.get("suspicious", 0),
+            "harmless": stats.get("harmless", 0),
+            "undetected": stats.get("undetected", 0),
+            "vendors": vendors,
+        }
+    except requests.exceptions.Timeout:
+        empty_result["status"] = "Request timeout"
+        return empty_result
+    except Exception as e:
+        empty_result["status"] = f"Error: {str(e)}"
+        return empty_result
+
+
+def evaluate_vt_result(vt_data: dict):
+    """Generates standardized verdict labels from VirusTotal responses."""
+    status = vt_data.get("status")
+    if status == "Submitted for scanning":
+        return "URL submitted to VirusTotal. Try again in a few seconds."
+    if status == "VirusTotal API Key Missing":
+        return "VirusTotal API key is not configured."
+    if status and ("Error" in status or status == "Request timeout"):
+        return f"⚠️ {status}"
+
+    malicious = vt_data.get("malicious", 0)
+    suspicious = vt_data.get("suspicious", 0)
+
+    if malicious > 0:
+        return "⚠️ Malicious"
+    if suspicious > 0:
+        return "⚠️ Suspicious"
+    return "✅ Safe"
 
 
 # Vercel serverless function entry point
