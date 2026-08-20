@@ -192,7 +192,9 @@ def evaluate_vt_result(vt_data: dict):
 
 
 # ---------------- ROUTE HANDLERS ----------------
-
+@app.route('/')
+def home():
+    return render_template('index.html') # or 'landing.html'
 
 @app.route("/", methods=["GET", "POST"])
 def login():
