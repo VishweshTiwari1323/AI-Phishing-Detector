@@ -23,36 +23,36 @@ app = Flask(
 
 # ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
 class VercelPathMiddleware:
-    """Extracts the actual requested URL from Vercel headers so sub-routes work."""
+    """Extracts the actual browser requested path from Vercel headers."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        # 1. Grab the real path requested by the browser
-        raw_path = (
-            environ.get("HTTP_X_INVOKE_PATH")
-            or environ.get("RAW_URI")
-            or environ.get("REQUEST_URI")
-            or environ.get("HTTP_X_FORWARDED_URI")
+        # 1. Prefer headers that contain the real incoming route from the user
+        path = (
+            environ.get("HTTP_X_MATCHED_PATH")
+            or environ.get("HTTP_X_FORWARDED_PATH")
+            or environ.get("HTTP_X_ORIGINAL_URI")
             or environ.get("PATH_INFO", "")
         )
-        
-        # 2. Strip any query parameters (e.g., /history?page=2 -> /history)
-        raw_path = raw_path.split("?")[0]
 
-        # 3. Strip internal Vercel serverless prefixes if present
+        # 2. Strip query strings (e.g., /history?page=2 -> /history)
+        path = path.split("?")[0]
+
+        # 3. Strip internal Vercel serverless prefixes only if fallback was used
         for prefix in ("/api/index.py", "/api/index", "/api", "/app.py", "/app"):
-            if raw_path.startswith(prefix):
-                raw_path = raw_path[len(prefix):] or "/"
+            if path.startswith(prefix):
+                path = path[len(prefix):] or "/"
                 break
 
-        if not raw_path.startswith("/"):
-            raw_path = "/" + raw_path
+        if not path.startswith("/"):
+            path = "/" + path
 
-        environ["PATH_INFO"] = raw_path
+        environ["PATH_INFO"] = path
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
+
 # ---------------- CONFIGURATION & DATABASE SETUP ----------------
 
 app.config["SECRET_KEY"] = os.environ.get(
@@ -235,8 +235,6 @@ def evaluate_vt_result(vt_data: dict):
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
-@app.route("/app.py", methods=["GET", "POST"])
-@app.route("/app", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
