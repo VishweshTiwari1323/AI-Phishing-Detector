@@ -23,25 +23,36 @@ app = Flask(
 
 # ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
 class VercelPathMiddleware:
-    """Translates Vercel's rewritten paths into matching Flask routes."""
+    """Extracts the actual requested URL from Vercel headers so sub-routes work."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched_path = environ.get("HTTP_X_MATCHED_PATH") or environ.get("HTTP_X_VERCEL_MATCHED_PATH")
-        if matched_path:
-            environ["PATH_INFO"] = matched_path
-        else:
-            path = environ.get("PATH_INFO", "")
-            for prefix in ("/app.py", "/app", "/api/index.py", "/api"):
-                if path.startswith(prefix):
-                    rest = path[len(prefix):]
-                    environ["PATH_INFO"] = rest if rest.startswith("/") else "/" + rest
-                    break
+        # 1. Grab the real path requested by the browser
+        raw_path = (
+            environ.get("HTTP_X_INVOKE_PATH")
+            or environ.get("RAW_URI")
+            or environ.get("REQUEST_URI")
+            or environ.get("HTTP_X_FORWARDED_URI")
+            or environ.get("PATH_INFO", "")
+        )
+        
+        # 2. Strip any query parameters (e.g., /history?page=2 -> /history)
+        raw_path = raw_path.split("?")[0]
+
+        # 3. Strip internal Vercel serverless prefixes if present
+        for prefix in ("/api/index.py", "/api/index", "/api", "/app.py", "/app"):
+            if raw_path.startswith(prefix):
+                raw_path = raw_path[len(prefix):] or "/"
+                break
+
+        if not raw_path.startswith("/"):
+            raw_path = "/" + raw_path
+
+        environ["PATH_INFO"] = raw_path
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
-
 # ---------------- CONFIGURATION & DATABASE SETUP ----------------
 
 app.config["SECRET_KEY"] = os.environ.get(
