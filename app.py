@@ -22,54 +22,23 @@ app = Flask(
 )
 
 # ---------------- ROBUST VERCEL WSGI PATH MIDDLEWARE ----------------
+from urllib.parse import parse_qs, urlencode
+
+# ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
 class VercelPathMiddleware:
-    """Accurately maps real browser routes on Vercel serverless."""
+    """Unpacks real route paths passed through Vercel rewrites."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        target_path = None
+        qs = environ.get("QUERY_STRING", "")
+        params = parse_qs(qs)
 
-        # Inspect headers for the real client URL
-        for header in (
-            "HTTP_X_FORWARDED_URI",
-            "HTTP_X_ORIGINAL_URL",
-            "HTTP_X_ORIGINAL_URI",
-            "HTTP_X_REWRITE_URL",
-            "REQUEST_URI",
-            "RAW_URI",
-        ):
-            val = environ.get(header)
-            if val:
-                target_path = val.split("?")[0]
-                break
+        if "__vpath__" in params:
+            vpath = params.pop("__vpath__")[0]
+            environ["PATH_INFO"] = "/" + vpath.lstrip("/")
+            environ["QUERY_STRING"] = urlencode(params, doseq=True)
 
-        # Check matched path if not pointing to internal serverless entrypoint
-        if not target_path:
-            matched = environ.get("HTTP_X_MATCHED_PATH")
-            if matched and not matched.startswith(("/api", "/app.py")):
-                target_path = matched.split("?")[0]
-
-        if not target_path:
-            target_path = environ.get("PATH_INFO", "/")
-
-        # Strip protocol/host if full URL was received
-        if "://" in target_path:
-            target_path = urlparse(target_path).path
-
-        # Strip internal Vercel serverless script prefixes
-        for prefix in ("/api/index.py", "/api/index", "/app.py", "/app"):
-            if target_path == prefix:
-                target_path = "/"
-                break
-            elif target_path.startswith(prefix + "/"):
-                target_path = target_path[len(prefix):] or "/"
-                break
-
-        if not target_path.startswith("/"):
-            target_path = "/" + target_path
-
-        environ["PATH_INFO"] = target_path
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
