@@ -22,9 +22,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-insecure-key-change-me"
 )
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
-)
+database_url = os.environ.get("DATABASE_URL", None)
+if database_url:
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Connect SQLAlchemy to the Flask app and create tables
@@ -473,5 +476,9 @@ def api_scan():
     )
 
 
+# Vercel serverless function entry point
+handler = app
+
+# For local development
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
