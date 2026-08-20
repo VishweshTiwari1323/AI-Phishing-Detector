@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cyber-noir-theme.css') }}">
+    <title>AI Scanner - AI Phishing Detection System</title>
+    <style>
+      /* ============ SCANNER-SPECIFIC CYBER-NOIR ============ */
+      .nav-glass {
+        position: sticky; top: 0; z-index: 60;
+        background: rgba(22, 24, 30, 0.6);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .nav-link {
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        text-decoration: none;
+        padding: 0.5rem 0.25rem;
+        transition: color var(--transition-fast);
+        position: relative;
+      }
+      .nav-link:hover { color: var(--neon-cyan); }
+      .nav-link.active { color: var(--neon-cyan); }
+      .nav-link.active::after {
+        content:''; position:absolute; left:0; right:0; bottom:-2px; height:2px;
+        background: var(--neon-cyan); box-shadow: var(--glow-cyan);
+      }
+      .brand {
+        font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.06em;
+        color: var(--neon-cyan); text-shadow: var(--glow-cyan);
+        display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;
+      }
+      .hero-wrapper { display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center; }
+      @media (min-width: 1024px){ .hero-wrapper { grid-template-columns: 1.1fr 0.9fr; } }
+      .ticker {
+        font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.2em;
+        color: var(--neon-cyan); text-transform: uppercase;
+      }
+      .vstat { text-align: center; }
+      .vstat .num {
+        font-family: var(--font-primary); font-size: 2.75rem; font-weight: 800; line-height: 1;
+      }
+      .vstat .label {
+        font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem;
+      }
+      .vendor-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+        padding: 0.6rem 0.75rem; border-radius: var(--radius-md);
+        background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+      }
+      .chip {
+        display:inline-flex; align-items:center; gap:0.35rem; font-family:var(--font-mono);
+        font-size:0.7rem; font-weight:600; letter-spacing:0.05em;
+        text-transform:uppercase; padding:0.3rem 0.65rem; border-radius:999px;
+      }
+      .spin-ring { border: 3px solid var(--border-medium); border-top-color: var(--neon-cyan); border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+    </style>
+</head>
+<body>
+
+<!-- Cyberpunk City Background -->
+<div class="cyber-noir-background"></div>
+
+<!-- Navigation -->
+{% set active_page = 'scan' %}{% include '_nav.html' %}
+
+<main class="max-w-7xl mx-auto px-6 md:px-8 py-12">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero-wrapper mb-14">
+        <div class="page-enter">
+            <div class="ticker mb-3">Threat Intelligence / Real-time Neural Inference</div>
+            <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4" style="color:var(--text-primary);">
+                Detect <span class="neon-text-cyan">Phishing</span><br>Websites with AI
+            </h1>
+            <p style="color:var(--text-secondary); font-size:1.125rem; max-width:32rem; line-height:1.7;">
+                Powered by advanced machine learning and multi-engine VirusTotal intelligence. Paste any URL to run instant neural diagnostics against phishing threats.
+            </p>
+
+            <div class="flex flex-wrap gap-3 mt-6">
+                <a href="#scan" class="btn btn-primary gpu-accelerated">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem;">radar</span>
+                    Scan Website
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-ghost">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem;">monitoring</span>
+                    View Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="relative hidden lg:flex items-center justify-center page-enter" style="animation-delay:0.15s;">
+            <div class="cyber-scan-frame">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-mono text-xs" style="color:var(--neon-cyan);">NEURAL CORE.v3</span>
+                    <span class="text-mono text-xs" style="color:var(--text-muted);">ONLINE</span>
+                </div>
+                <div class="text-center">
+                    <div class="metric-card-value">99.4%</div>
+                    <div class="metric-card-label">Threat Precision</div>
+                </div>
+                <div class="grid grid-cols-3 gap-3 mt-6">
+                    <div class="glass-card-transparent p-3 text-center" style="border-radius:12px;">
+                        <div class="num" style="color:var(--neon-cyan);">0.02s</div>
+                        <div class="label" style="font-size:0.65rem;">Inference</div>
+                    </div>
+                    <div class="glass-card-transparent p-3 text-center" style="border-radius:12px;">
+                        <div class="num" style="color:var(--neon-pink);">1.2M</div>
+                        <div class="label" style="font-size:0.65rem;">Datasets</div>
+                    </div>
+                    <div class="glass-card-transparent p-3 text-center" style="border-radius:12px;">
+                        <div class="num" style="color:var(--neon-green);">24/7</div>
+                        <div class="label" style="font-size:0.65rem;">Uptime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ SCAN FORM ============ -->
+    <section id="scan" class="pb-16">
+        <div class="glass-card max-w-3xl mx-auto p-8 md:p-12 page-enter gpu-accelerated" style="animation-delay:0.2s;">
+            <div class="text-center mb-8">
+                <div class="metric-icon-pulse inline-flex mb-3">
+                    <span class="material-symbols-outlined" style="font-size:2rem; color:var(--neon-cyan);">radar</span>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold neon-text-cyan mb-2">Instant Analysis</h2>
+                <p style="color:var(--text-secondary); font-family:var(--font-mono); font-size:0.9rem;">
+                    Paste any URL below to run neural network diagnostics
+                </p>
+            </div>
+
+            <form method="POST" action="/scan" id="scan-form">
+                {{ form.hidden_tag() }}
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-xl border"
+                             style="background:{% if category == 'danger' %}rgba(255,0,85,0.1){% elif category == 'success' %}rgba(0,255,157,0.1){% else %}rgba(0,212,255,0.1){% endif %}; border-color:{% if category == 'danger' %}var(--status-danger){% elif category == 'success' %}var(--status-safe){% else %}var(--status-info){% endif %}; color:{% if category == 'danger' %}var(--status-danger){% elif category == 'success' %}var(--status-safe){% else %}var(--status-info){% endif %};">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- URL Input with leading icon -->
+                <div class="input-wrapper">
+                    <span class="input-icon material-symbols-outlined">link</span>
+                    {{ form.url(
+                        id="url-input",
+                        class="input",
+                        placeholder="https://google.com",
+                        spellcheck="false",
+                        autocapitalize="off",
+                        autocomplete="off"
+                    ) }}
+                    {% if form.url.errors %}
+                        <p style="color:var(--status-danger); font-size:0.8rem; margin-top:0.4rem;">{{ form.url.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <button type="submit" id="scan-btn" class="btn btn-primary w-full gpu-accelerated">
+                    <span id="scan-btn-text">Analyze Website</span>
+                    <span id="scan-icon" class="material-symbols-outlined" style="font-size:1.15rem;">search</span>
+                    <span id="scan-spinner" class="spin-ring hidden"></span>
+                </button>
+            </form>
+
+            <!-- ============ VIRUSTOTAL RESULT CARD ============ -->
+            {% if vt_result %}
+            <div class="glass-card-elevated mt-8 p-6 page-enter" style="animation-delay:0.1s;">
+                <!-- Header -->
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:rgba(0,255,255,0.12); border:1px solid var(--border-accent);">
+                            <span class="material-symbols-outlined" style="color:var(--neon-cyan); font-size:1.5rem;">security</span>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-lg">VirusTotal Analysis</h3>
+                            <p class="text-mono text-xs" style="color:var(--text-muted);">Multiple security engine consensus</p>
+                        </div>
+                    </div>
+
+                    {% if vt_result and "Malicious" in vt_result %}
+                        <span class="chip chip-danger"><span class="status-icon status-icon-danger"></span>{{ vt_result }}</span>
+                    {% elif vt_result and "Suspicious" in vt_result %}
+                        <span class="chip chip-warning"><span class="status-icon"></span>{{ vt_result }}</span>
+                    {% else %}
+                        <span class="chip chip-safe"><span class="status-icon status-icon-safe"></span>{{ vt_result }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Stats grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="vstat p-4 rounded-xl" style="background:rgba(255,0,85,0.08); border:1px solid rgba(255,0,85,0.2);">
+                        <div class="num" style="color:var(--status-danger); text-shadow:var(--glow-danger);">{{ malicious if malicious is not none else 0 }}</div>
+                        <div class="label">Malicious</div>
+                    </div>
+                    <div class="vstat p-4 rounded-xl" style="background:rgba(255,184,0,0.08); border:1px solid rgba(255,184,0,0.2);">
+                        <div class="num" style="color:var(--status-warning); text-shadow:var(--glow-warning,0 0 8px rgba(255,184,0,0.5));">{{ suspicious if suspicious is not none else 0 }}</div>
+                        <div class="label">Suspicious</div>
+                    </div>
+                    <div class="vstat p-4 rounded-xl" style="background:rgba(0,255,157,0.08); border:1px solid rgba(0,255,157,0.2);">
+                        <div class="num" style="color:var(--status-safe); text-shadow:var(--glow-safe);">{{ harmless if harmless is not none else 0 }}</div>
+                        <div class="label">Harmless</div>
+                    </div>
+                    <div class="vstat p-4 rounded-xl" style="background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2);">
+                        <div class="num" style="color:var(--status-info); font-size:1.4rem; padding-top:0.4rem;">Verdict</div>
+                        <div class="label" style="margin-top:0.1rem;">{{ vt_result }}</div>
+                    </div>
+                </div>
+
+                <!-- Action bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 pt-5 border-t" style="border-color:var(--border-subtle);">
+                    <div class="flex items-center gap-2 text-mono text-xs" style="color:var(--text-muted);">
+                        <span class="material-symbols-outlined" style="color:var(--neon-cyan); font-size:1rem;">analytics</span>
+                        Real-time heuristics &amp; threat intelligence computed
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="toggleDetailsModal(true)" class="btn btn-ghost" style="padding:0.5rem 0.9rem; font-size:0.8125rem;">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">info</span> More Info
+                        </button>
+                        <button type="button" onclick="downloadPDFReport()" class="btn btn-primary" style="padding:0.5rem 0.9rem; font-size:0.8125rem;">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">picture_as_pdf</span> PDF
+                        </button>
+                        <button type="button" onclick="downloadCSVReport()" class="btn btn-secondary" style="padding:0.5rem 0.9rem; font-size:0.8125rem;">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">csv</span> CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- ============ CAPABILITY GRID ============ -->
+    <section class="pb-16">
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="glass-card p-8 page-enter" style="animation-delay:0.1s;">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background:rgba(0,255,255,0.1); border:1px solid var(--border-accent);">
+                    <span class="material-symbols-outlined" style="color:var(--neon-cyan);">security</span>
+                </div>
+                <h3 class="font-bold text-lg mb-3">Secure Detection</h3>
+                <p style="color:var(--text-secondary); font-size:0.925rem;">Algorithms analyze SSL certificates, DNS records &amp; domain aging to verify legitimacy.</p>
+            </div>
+            <div class="glass-card p-8 page-enter" style="animation-delay:0.15s;">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background:rgba(255,0,255,0.1); border:1px solid rgba(255,0,255,0.3);">
+                    <span class="material-symbols-outlined" style="color:var(--neon-pink);">bolt</span>
+                </div>
+                <h3 class="font-bold text-lg mb-3">Fast Prediction</h3>
+                <p style="color:var(--text-secondary); font-size:0.925rem;">Parallel processing delivers sub-second analysis of complex DOM structures &amp; scripts.</p>
+            </div>
+            <div class="glass-card p-8 page-enter" style="animation-delay:0.2s;">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background:rgba(0,255,157,0.1); border:1px solid rgba(0,255,157,0.3);">
+                    <span class="material-symbols-outlined" style="color:var(--neon-green);">check_circle</span>
+                </div>
+                <h3 class="font-bold text-lg mb-3">High Accuracy</h3>
+                <p style="color:var(--text-secondary); font-size:0.925rem;">Trained on 1.2M+ datasets achieving a 99.4% precision rate on zero-day phishing.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ============ DETAILS MODAL ============ -->
+{% if vt_result %}
+<div id="details-modal" class="modal-overlay" style="align-items:center; justify-content:center;">
+    <div class="glass-card modal-card" style="max-width:56rem; width:92%; padding:1.75rem; flex-direction:column; max-height:90vh;">
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-4 pb-4 mb-4 border-b" style="border-color:var(--border-subtle);">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(0,255,255,0.1); border:1px solid var(--border-accent);">
+                    <span class="material-symbols-outlined" style="color:var(--neon-cyan);">troubleshoot</span>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="font-bold text-lg">Deep Threat Intelligence</h3>
+                    <p class="text-mono text-xs truncate" style="color:var(--neon-cyan);">{{ url if url else 'N/A' }}</p>
+                </div>
+            </div>
+            <button onclick="toggleDetailsModal(false)" class="btn btn-ghost shrink-0" style="padding:0.4rem; width:2.25rem; height:2.25rem;">
+                <span class="material-symbols-outlined" style="font-size:1.1rem;">close</span>
+            </button>
+        </div>
+
+        <div class="overflow-y-auto pr-2" style="flex:1;">
+
+            <!-- Risk banner -->
+            <div class="glass-card-transparent p-5 rounded-xl mb-5">
+                <span class="text-mono text-xs uppercase tracking-widest" style="color:var(--text-muted);">Threat Risk Classification</span>
+                <div class="text-xl font-bold mt-1">
+                    {% if vt_result and "Malicious" in vt_result %}
+                        <span style="color:var(--status-danger);">CRITICAL THREAT DETECTED (HIGH RISK)</span>
+                    {% elif vt_result and "Suspicious" in vt_result %}
+                        <span style="color:var(--status-warning);">SUSPICIOUS ANOMALY (MODERATE RISK)</span>
+                    {% else %}
+                        <span style="color:var(--status-safe);">VERIFIED CLEAN / NO KNOWN THREATS</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Multi-engine tally -->
+            <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="vstat p-4 rounded-xl" style="background:rgba(255,0,85,0.08); border:1px solid rgba(255,0,85,0.2);">
+                    <div class="num" style="color:var(--status-danger);">{{ malicious if malicious is not none else 0 }}</div>
+                    <div class="label">Malicious</div>
+                </div>
+                <div class="vstat p-4 rounded-xl" style="background:rgba(255,184,0,0.08); border:1px solid rgba(255,184,0,0.2);">
+                    <div class="num" style="color:var(--status-warning);">{{ suspicious if suspicious is not none else 0 }}</div>
+                    <div class="label">Suspicious</div>
+                </div>
+                <div class="vstat p-4 rounded-xl" style="background:rgba(0,255,157,0.08); border:1px solid rgba(0,255,157,0.2);">
+                    <div class="num" style="color:var(--status-safe);">{{ harmless if harmless is not none else 0 }}</div>
+                    <div class="label">Harmless</div>
+                </div>
+            </div>
+
+            <!-- Vendor breakdown -->
+            {% if vendors %}
+            <h4 class="text-mono uppercase tracking-widest mb-3" style="color:var(--neon-cyan); font-size:0.75rem;">
+                Security Vendors' Analysis &middot; {{ vendors|length }} Engines
+            </h4>
+            <div class="grid md:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto pr-1">
+                {% for vendor_name, details in vendors.items() %}
+                <div class="vendor-row">
+                    <span class="text-sm" style="color:var(--text-primary); font-family:var(--font-mono);">{{ vendor_name }}</span>
+                    {% if details.category == 'malicious' or details.result == 'malicious' %}
+                        <span class="chip chip-danger">{{ details.result|capitalize if details.result else 'Malicious' }}</span>
+                    {% elif details.category == 'suspicious' or details.result == 'suspicious' %}
+                        <span class="chip chip-warning">Suspicious</span>
+                    {% else %}
+                        <span class="chip chip-safe">Clean</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end pt-4 mt-4 border-t" style="border-color:var(--border-subtle);">
+            <button onclick="toggleDetailsModal(false)" class="btn btn-secondary">
+                <span class="material-symbols-outlined" style="font-size:1rem;">close</span> Close Analysis
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+  .brand-text { font-family:var(--font-mono); font-weight:700; letter-spacing:0.06em; color:var(--neon-cyan); text-shadow:var(--glow-cyan); display:flex; align-items:center; gap:0.5rem; font-size:1.05rem; text-decoration:none; }
+  .cyber-scan-frame {
+    position: relative; border-radius: var(--radius-lg); padding: 2rem;
+    background: var(--surface-card); backdrop-filter: blur(24px);
+    border: 1px solid var(--border-accent);
+    box-shadow: var(--shadow-elevated), var(--glow-cyan);
+    max-width: 26rem; width: 100%;
+  }
+  .cyber-scanlines::after {
+    content:''; position:absolute; inset:0; border-radius: inherit; pointer-events:none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,255,255,0.03) 3px, rgba(0,255,255,0.03) 4px);
+  }
+  .chip { display:inline-flex; align-items:center; gap:0.35rem; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:0.35rem 0.75rem; border-radius:999px; }
+  .chip-danger { background:rgba(255,0,85,0.15); color:var(--status-danger); border:1px solid rgba(255,0,85,0.3); box-shadow:var(--glow-danger); }
+  .chip-warning { background:rgba(255,184,0,0.15); color:var(--status-warning); border:1px solid rgba(255,184,0,0.3); }
+  .chip-safe { background:rgba(0,255,157,0.15); color:var(--status-safe); border:1px solid rgba(0,255,157,0.3); box-shadow:var(--glow-safe); }
+  .modal-overlay { display:none; position:fixed; inset:0; z-index:100; background:rgba(5,6,9,0.85); backdrop-filter:blur(10px); padding:1rem; }
+  .modal-overlay.open { display:flex; }
+  .modal-card { animation: modalIn 0.35s var(--transition-bounce); }
+  @keyframes modalIn { from{ transform:translateY(20px) scale(0.96); opacity:0;} to{ transform:translateY(0) scale(1); opacity:1;} }
+  .metric-icon-pulse { animation: pulse 2s ease-in-out infinite; }
+</style>
+
+<script>
+  function toggleDetailsModal(show){ document.getElementById('details-modal').classList.toggle('open', show); }
+  window.addEventListener('click', function(e){ if(e.target.id === 'details-modal') toggleDetailsModal(false); });
+
+  document.getElementById('scan-form').addEventListener('submit', function(){
+    const btn = document.getElementById('scan-btn');
+    const text = document.getElementById('scan-btn-text');
+    const icon = document.getElementById('scan-icon');
+    const spin = document.getElementById('scan-spinner');
+    btn.disabled = true; text.textContent = 'Analyzing...'; icon.classList.add('hidden'); spin.classList.remove('hidden');
+  });
+
+  function downloadPDFReport() {
+    const targetUrl = "{{ url if url else 'Unknown URL' }}";
+    const vtResult = "{{ vt_result if vt_result else 'N/A' }}";
+    const malicious = "{{ malicious if malicious is not none else 0 }}";
+    const suspicious = "{{ suspicious if suspicious is not none else 0 }}";
+    const harmless = "{{ harmless if harmless is not none else 0 }}";
+    const timestamp = new Date().toLocaleString();
+    const w = window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>Phishing Scan Security Report</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#1e293b;line-height:1.6}.h{border-bottom:3px solid #0284c7;padding-bottom:15px;margin-bottom:25px}.h h1{color:#0f172a;margin:0;font-size:24px}.h p{color:#64748b;margin:5px 0 0;font-size:14px}.s{margin-bottom:25px}.t{font-size:16px;font-weight:bold;color:#0369a1;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:12px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #cbd5e1;padding:10px 12px;text-align:left;font-size:14px}th{background:#f1f5f9;color:#334155}.f{margin-top:40px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;text-align:center}</style></head><body>
+    <div class="h"><h1>AI Phishing Detection System - Official Security Report</h1><p>AI Phishing Detector | Team Autonomous Agents</p></div>
+    <div class="s"><div class="t">Scan Metadata</div><p><strong>Target URL:</strong> ${targetUrl}</p><p><strong>Generated At:</strong> ${timestamp}</p><p><strong>Overall Verdict:</strong> ${vtResult}</p></div>
+    <div class="s"><div class="t">Engine Statistics</div><table><thead><tr><th>Detection Type</th><th>Engine Count</th></tr></thead><tbody><tr><td>Malicious</td><td>${malicious}</td></tr><tr><td>Suspicious</td><td>${suspicious}</td></tr><tr><td>Harmless / Clean</td><td>${harmless}</td></tr></tbody></table></div>
+    <div class="f">Generated automatically by AI Phishing Detector. Confirmed by VirusTotal Threat Intelligence.</div></body></html>`);
+    w.document.close(); w.focus(); setTimeout(()=>w.print(), 500);
+  }
+
+  function downloadCSVReport() {
+    const rows = [["Timestamp","Target URL","Verdict","Malicious","Suspicious","Harmless"],
+      [`"${new Date().toISOString()}"`,`"{{ url if url else 'Unknown' }}"`,`"{{ vt_result if vt_result else 'N/A' }}"`,"{{ malicious if malicious is not none else 0 }}","{{ suspicious if suspicious is not none else 0 }}","{{ harmless if harmless is not none else 0 }}"]];
+    const link = document.createElement('a');
+    link.href = "data:text/csv;charset=utf-8," + encodeURIComponent(rows.map(r=>r.join(",")).join("\n"));
+    link.download = `Phishing_Scan_Report_${Date.now()}.csv`;
+    document.body.appendChild(link); link.click(); link.remove();
+  }
+
+  (function(){
+    var els = document.querySelectorAll('.page-enter');
+    els.forEach(function(el){
+      var d = getComputedStyle(el).animationDelay || '0s';
+      el.style.transitionDelay = d;
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('page-enter-active'); }); });
+    });
+  })();
+</script>
+</body>
+</html>

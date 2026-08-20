@@ -1,0 +1,264 @@
+/* =============================================================================
+   SCAN PAGE ENHANCEMENT LAYER — Floating effects, glows, particles, reveals
+   Composes on top of style.css / Tailwind. GPU-friendly (transform+opacity).
+   ============================================================================= */
+
+/* ---------- Ambient floating gradient orbs ---------- */
+.ambient-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ambient-orbs .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  will-change: transform;
+}
+.orb-cyan  { width: 340px; height: 340px; top: -80px;  right: 8%;  background: rgba(0, 212, 255, 0.55); animation: orbFloat 26s ease-in-out infinite; }
+.orb-purple{ width: 420px; height: 420px; bottom: -120px; left: -60px; background: rgba(123, 97, 255, 0.5); animation: orbFloat 32s ease-in-out infinite reverse; }
+.orb-green { width: 260px; height: 260px; top: 38%; left: 12%;  background: rgba(0, 255, 170, 0.35); animation: orbFloat 22s ease-in-out infinite 2s; }
+.orb-pink  { width: 220px; height: 220px; top: 12%;  left: 58%;  background: rgba(255, 0, 153, 0.3);  animation: orbFloat 28s ease-in-out infinite 1s; }
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%      { transform: translate(40px, -60px) scale(1.15); }
+  50%      { transform: translate(-50px, 30px) scale(0.9); }
+  75%      { transform: translate(30px, 50px) scale(1.05); }
+}
+
+/* ---------- Floating elements ---------- */
+.floating         { animation: floatY 6s ease-in-out infinite; }
+.floating-slow    { animation: floatY 9s ease-in-out infinite; }
+.floating-fast    { animation: floatY 4s ease-in-out infinite; }
+.floating-delayed { animation: floatY 6s ease-in-out infinite 1.5s; }
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-16px); }
+}
+
+/* ---------- Hero cyber background ---------- */
+.hero-cyber-bg {
+  background:
+    radial-gradient(1200px 600px at 50% 30%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
+    radial-gradient(1000px 500px at 50% 70%, rgba(99, 102, 241, 0.06) 0%, transparent 55%),
+    radial-gradient(800px 400px at 20% 20%, rgba(6, 182, 212, 0.04) 0%, transparent 50%),
+    #0B0F19;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  position: relative;
+}
+.hero-cyber-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 60% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 30% 60%, rgba(99, 102, 241, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- Crisp gradient headline (white -> sky-blue -> cyan) ---------- */
+.hero-neon-title {
+  font-weight: 800;
+  background: linear-gradient(180deg, #ffffff 0%, #38BDF8 40%, #06B6D4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ---------- Subtitle: Slate-300/400, line-height 1.65 ---------- */
+.hero-subtitle {
+  color: #94A3B8;
+  font-size: 1rem;
+  line-height: 1.65;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ---------- Hero rotating radar ring ---------- */
+.radar-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+.radar-ring {
+  position: absolute;
+  inset: -26px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  animation: spin 14s linear infinite;
+}
+.radar-ring::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(0, 212, 255, 0.35), transparent 25%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  animation: spin 3s linear infinite;
+}
+.radar-ring-2 {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  border: 1px dashed rgba(123, 97, 255, 0.3);
+  animation: spin 24s linear infinite reverse;
+}
+.radar-halo {
+  position: absolute;
+  inset: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.25), transparent 65%);
+  animation: pulseHalo 4s ease-in-out infinite;
+}
+@keyframes pulseHalo {
+  0%, 100% { transform: scale(0.9); opacity: 0.5; }
+  50%      { transform: scale(1.1); opacity: 1; }
+}
+
+/* ---------- Glowing animated text ---------- */
+.glow-text {
+  display: inline-block;
+  background: linear-gradient(90deg, #00d4ff, #00ffaa, #7b61ff, #00d4ff);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: auroraFlow 5s linear infinite;
+  filter: drop-shadow(0 0 18px rgba(0, 212, 255, 0.45));
+}
+@keyframes auroraFlow { to { background-position: 300% center; } }
+
+/* ---------- Floating stat chips ---------- */
+.float-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+.float-chip .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+  animation: blinkDot 1.6s ease-in-out infinite;
+}
+@keyframes blinkDot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ---------- Glass pill metric HUD ---------- */
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+  font-size: 0.85rem;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+.glass-pill .pulse-glow {
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-left: 0.5rem;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.18), 0 0 24px rgba(6, 182, 212, 0.1);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.3); }
+}
+
+/* ---------- Pulse color variants ---------- */
+.pulse-green .pulse-glow { animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.pulse-cyan .pulse-glow { animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.pulse-purple .pulse-glow { animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ---------- Staggered reveal on load (pure CSS, always resolves) ---------- */
+[data-reveal] {
+  opacity: 0;
+  animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Button shine + pulse ---------- */
+.shine-btn { position: relative; overflow: hidden; }
+.shine-btn::after {
+  content: "";
+  position: absolute;
+  top: -50%; left: -100%;
+  width: 50%; height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  transform: rotate(25deg);
+  animation: btnShine 4s ease-in-out infinite;
+}
+@keyframes btnShine {
+  0%, 100% { left: -100%; }
+  50%      { left: 220%; }
+}
+
+/* ---------- Electric glow focus ---------- */
+.electric-glow { box-shadow: 0 0 30px rgba(6, 182, 212, 0.45), 0 0 60px rgba(6, 182, 212, 0.25); }
+
+/* ---------- Magnetic hover (JS drives a subtle translate) ---------- */
+.magnetic { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ---------- Cursor glow follower ---------- */
+.glow-cursor {
+  position: fixed;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.4), inset 0 0 12px rgba(0, 212, 255, 0.2);
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, opacity 0.2s, border-color 0.2s;
+}
+.glow-cursor.is-down { width: 14px; height: 14px; border-color: rgba(0, 255, 170, 0.8); }
+
+/* ---------- Input focus enhancement ---------- */
+input:focus, textarea:focus {
+  border-color: #00d4ff !important;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.18), 0 0 40px rgba(0, 212, 255, 0.28) !important;
+}
+
+/* ---------- Result cards staggered entrance ---------- */
+.result-enter { opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.2,0.8,0.2,1) forwards; }
+
+/* ---------- Hover micro-interactions ---------- */
+.card-lift { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.card-lift:hover { transform: translateY(-8px); }
+
+/* ---------- Accessibility: disable heavy motion if requested ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orbs .orb, .floating, .floating-slow, .floating-fast, .floating-delayed,
+  .radar-ring, .radar-ring-2, .radar-halo, .glow-text, .float-chip .dot,
+  .shine-btn::after, [data-reveal] {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .glow-cursor { display: none; }
+}

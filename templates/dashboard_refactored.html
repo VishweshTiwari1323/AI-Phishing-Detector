@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="description" content="Enterprise Neural Phishing & Multi-Engine Threat Intelligence Platform">
+    <title>AI Phishing Detection System | Security Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Material Symbols Outlined -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+    try {
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#060911",
+                        "surface": "#0B101D",
+                        "surface-card": "#0E1626",
+                        "surface-container": "#111A2E",
+                        "surface-container-high": "#18243E",
+                        "primary": "#818CF8",
+                        "secondary": "#22D3EE",
+                        "on-background": "#E2E8F0",
+                        "on-surface": "#F8FAFC",
+                        "on-surface-variant": "#94A3B8"
+                    },
+                    fontFamily: {
+                        "sans": ["'Plus Jakarta Sans'", "sans-serif"],
+                        "mono": ["'JetBrains Mono'", "monospace"]
+                    }
+                }
+            }
+        }
+    } catch (_e) {}
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #060911; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        .scan-grid-bg {
+            background-size: 36px 36px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-sans min-h-screen scan-grid-bg antialiased flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <!-- Ambient Light Flares -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+        <div class="absolute top-10 right-10 w-[450px] h-[450px] bg-indigo-600/10 rounded-full blur-[140px]"></div>
+    </div>
+
+    <!-- ==================== TOP NAVIGATION BAR ==================== -->
+    <header class="fixed top-0 inset-x-0 z-50">
+        <nav class="bg-[#0B0F19]/95 backdrop-blur-md border-b border-white/10 h-16 transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+                
+                <!-- Left Branding -->
+                <a href="{{ url_for('scan') }}" class="flex items-center gap-3 group focus:outline-none">
+                    <span class="material-symbols-outlined text-[#22D3EE] text-2xl group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">shield</span>
+                    <span class="font-bold text-lg sm:text-xl text-white tracking-tight">AI Phishing Detection System</span>
+                </a>
+
+                <!-- Right Navigation Links -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="{{ url_for('scan') }}" 
+                       class="text-sm py-1 transition-colors {% if request.endpoint == 'scan' %}text-[#22D3EE] border-b-2 border-[#22D3EE] font-semibold{% else %}text-gray-300 hover:text-white{% endif %}">
+                        Scanner
+                    </a>
+
+                    <a href="{{ url_for('batch_scan') }}" 
+                       class="text-sm py-1 transition-colors {% if request.endpoint == 'batch_scan' %}text-[#22D3EE] border-b-2 border-[#22D3EE] font-semibold{% else %}text-gray-300 hover:text-white{% endif %}">
+                        Batch Scan
+                    </a>
+
+                    <a href="{{ url_for('history') }}" 
+                       class="text-sm py-1 transition-colors {% if request.endpoint == 'history' %}text-[#22D3EE] border-b-2 border-[#22D3EE] font-semibold{% else %}text-gray-300 hover:text-white{% endif %}">
+                        History
+                    </a>
+
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="text-sm py-1 transition-colors {% if request.endpoint == 'dashboard' %}text-[#22D3EE] border-b-2 border-[#22D3EE] font-semibold{% else %}text-gray-300 hover:text-white{% endif %}">
+                        Dashboard
+                    </a>
+
+                    <a href="{{ url_for('logout') }}" 
+                       class="text-xs uppercase font-mono px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:text-red-400 hover:border-red-500/30 transition-all ml-2">
+                        Sign Out
+                    </a>
+                </div>
+
+                <!-- Mobile Drawer Toggle -->
+                <button type="button" onclick="toggleMobileNav()" class="md:hidden p-2 rounded-lg bg-slate-900 border border-white/10 text-gray-300 hover:text-white focus:outline-none" aria-label="Toggle navigation">
+                    <span id="nav-icon-menu" class="material-symbols-outlined text-2xl">menu</span>
+                    <span id="nav-icon-close" class="material-symbols-outlined text-2xl hidden">close</span>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation Drawer -->
+            <div id="mobile-nav" class="hidden md:hidden bg-[#0B0F19] border-b border-white/10 px-6 py-4 space-y-3 shadow-2xl">
+                <a href="{{ url_for('scan') }}" class="block py-1.5 text-sm {% if request.endpoint == 'scan' %}text-[#22D3EE] font-bold{% else %}text-gray-300 hover:text-white{% endif %}">Scanner</a>
+                <a href="{{ url_for('batch_scan') }}" class="block py-1.5 text-sm {% if request.endpoint == 'batch_scan' %}text-[#22D3EE] font-bold{% else %}text-gray-300 hover:text-white{% endif %}">Batch Scan</a>
+                <a href="{{ url_for('history') }}" class="block py-1.5 text-sm {% if request.endpoint == 'history' %}text-[#22D3EE] font-bold{% else %}text-gray-300 hover:text-white{% endif %}">History</a>
+                <a href="{{ url_for('dashboard') }}" class="block py-1.5 text-sm {% if request.endpoint == 'dashboard' %}text-[#22D3EE] font-bold{% else %}text-gray-300 hover:text-white{% endif %}">Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="block py-1.5 text-xs text-red-400 uppercase font-mono">Sign Out</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ==================== MAIN DASHBOARD CONTENT ==================== -->
+    <main class="relative z-10 pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex-grow w-full">
+
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/10">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono text-[#22D3EE] mb-2">
+                    <span class="material-symbols-outlined text-sm">analytics</span> REAL-TIME TELEMETRY
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Security Command Matrix</h1>
+                <p class="text-gray-400 text-sm mt-1">Aggregated phishing trends, threat distributions, and inspection activity.</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('scan') }}" class="px-4 py-2.5 rounded-xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all duration-200">
+                    <span class="material-symbols-outlined text-lg">radar</span>
+                    <span>Scan Target URL</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Metrics Grid (4 Stat Cards) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+
+            <!-- Total Scans -->
+            <div class="bg-surface-card border border-white/10 p-6 rounded-2xl relative overflow-hidden shadow-lg backdrop-blur-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs uppercase tracking-wider font-mono text-gray-400">Total Analyzed</span>
+                    <span class="material-symbols-outlined text-[#22D3EE] text-2xl">analytics</span>
+                </div>
+                <div class="text-4xl font-extrabold text-white font-mono mb-1">{{ total_scans }}</div>
+                <div class="text-xs text-gray-400 font-mono">URLs Processed Globally</div>
+            </div>
+
+            <!-- Phishing Detected -->
+            <div class="bg-surface-card border border-red-500/20 p-6 rounded-2xl relative overflow-hidden shadow-lg backdrop-blur-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs uppercase tracking-wider font-mono text-red-300">Phishing Detected</span>
+                    <span class="material-symbols-outlined text-red-400 text-2xl">warning</span>
+                </div>
+                <div class="text-4xl font-extrabold text-red-400 font-mono mb-1">{{ phishing_count }}</div>
+                <div class="text-xs text-red-300/70 font-mono">Malicious Payloads Blocked</div>
+            </div>
+
+            <!-- Safe Sites -->
+            <div class="bg-surface-card border border-emerald-500/20 p-6 rounded-2xl relative overflow-hidden shadow-lg backdrop-blur-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs uppercase tracking-wider font-mono text-emerald-300">Safe Websites</span>
+                    <span class="material-symbols-outlined text-emerald-400 text-2xl">verified</span>
+                </div>
+                <div class="text-4xl font-extrabold text-emerald-400 font-mono mb-1">{{ safe_count }}</div>
+                <div class="text-xs text-emerald-300/70 font-mono">Clean / Benign Domains</div>
+            </div>
+
+            <!-- Suspicious Sites -->
+            <div class="bg-surface-card border border-yellow-500/20 p-6 rounded-2xl relative overflow-hidden shadow-lg backdrop-blur-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs uppercase tracking-wider font-mono text-yellow-300">Suspicious Flags</span>
+                    <span class="material-symbols-outlined text-yellow-400 text-2xl">report_problem</span>
+                </div>
+                <div class="text-4xl font-extrabold text-yellow-400 font-mono mb-1">
+                    {{ (total_scans - (phishing_count + safe_count)) if (total_scans - (phishing_count + safe_count)) >= 0 else 0 }}
+                </div>
+                <div class="text-xs text-yellow-300/70 font-mono">Heuristic Anomaly Alerts</div>
+            </div>
+
+        </div>
+
+        <!-- Recent Scans Section -->
+        <div class="bg-surface-card border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md mb-10">
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Recent Activity Stream</h2>
+                    <p class="text-xs text-gray-400 font-mono">Latest telemetry records</p>
+                </div>
+                <a href="{{ url_for('history') }}" class="text-[#22D3EE] text-xs font-mono hover:underline flex items-center gap-1">
+                    <span>View Complete Logs</span>
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+
+            {% if recent_scans %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse font-mono text-xs">
+                    <thead>
+                        <tr class="bg-slate-950/80 border-b border-white/10 text-gray-400 uppercase">
+                            <th class="py-4 px-6 font-semibold">Target URL</th>
+                            <th class="py-4 px-6 font-semibold">Neural Prediction</th>
+                            <th class="py-4 px-6 font-semibold">VirusTotal Status</th>
+                            <th class="py-4 px-6 font-semibold text-right">Timestamp (UTC)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for scan in recent_scans %}
+                        <tr class="hover:bg-white/[0.02] transition-colors">
+                            <td class="py-4 px-6 max-w-sm sm:max-w-md truncate text-gray-200" title="{{ scan.url }}">
+                                {{ scan.url }}
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                {% if scan.ml_prediction == 'Phishing Website' %}
+                                    <span class="px-2.5 py-1 rounded-md bg-red-500/15 text-red-400 border border-red-500/30 font-semibold inline-flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">warning</span> Phishing
+                                    </span>
+                                {% elif scan.ml_prediction == 'Safe Website' %}
+                                    <span class="px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold inline-flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">verified</span> Safe
+                                    </span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 rounded-md bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">
+                                        {{ scan.ml_prediction }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-6 text-gray-300 whitespace-nowrap">
+                                {{ scan.vt_result or 'N/A' }}
+                            </td>
+                            <td class="py-4 px-6 text-right text-gray-400 whitespace-nowrap">
+                                {{ scan.scan_timestamp.strftime('%Y-%m-%d %H:%M') if scan.scan_timestamp else 'N/A' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-12 text-center text-gray-400">
+                <span class="material-symbols-outlined text-5xl mb-2 text-gray-600 block">hourglass_empty</span>
+                <p class="text-sm">No recent scans logged in database.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- System Architecture & Threat Vector Insights -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+            <div class="bg-surface-card border border-white/10 p-6 rounded-2xl shadow-lg">
+                <div class="flex items-center gap-3 mb-3 text-white font-bold">
+                    <span class="material-symbols-outlined text-[#22D3EE]">model_training</span>
+                    <span>ML Classifier Engine</span>
+                </div>
+                <p class="text-gray-400 leading-relaxed">
+                    Evaluates lexical entropy, token distributions, and sub-domain structures via trained TF-IDF vectorization models.
+                </p>
+            </div>
+
+            <div class="bg-surface-card border border-white/10 p-6 rounded-2xl shadow-lg">
+                <div class="flex items-center gap-3 mb-3 text-white font-bold">
+                    <span class="material-symbols-outlined text-[#22D3EE]">hub</span>
+                    <span>Multi-Engine Feeds</span>
+                </div>
+                <p class="text-gray-400 leading-relaxed">
+                    Synchronizes real-time vendor blacklists and reputation databases through VirusTotal API v3 telemetry.
+                </p>
+            </div>
+
+            <div class="bg-surface-card border border-white/10 p-6 rounded-2xl shadow-lg">
+                <div class="flex items-center gap-3 mb-3 text-white font-bold">
+                    <span class="material-symbols-outlined text-[#22D3EE]">lock</span>
+                    <span>Dual Consensus Security</span>
+                </div>
+                <p class="text-gray-400 leading-relaxed">
+                    Flags target as hostile if either ML heuristic confidence or external engine blacklists trigger positive threat signals.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="relative z-10 border-t border-white/10 bg-slate-950/80 backdrop-blur-xl py-6 px-6 font-mono text-xs text-gray-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 text-gray-400">
+                <span class="material-symbols-outlined text-[#22D3EE] text-sm">verified</span>
+                <span>AI Phishing Detection System &copy; 2026</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <span>DATABASE: SQLITE 3</span>
+                <span>STATUS: ACTIVE</span>
+                <span class="text-emerald-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ALL SYSTEMS OPERATIONAL
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Scripts -->
+    <script>
+        function toggleMobileNav() {
+            const nav = document.getElementById('mobile-nav');
+            const iconMenu = document.getElementById('nav-icon-menu');
+            const iconClose = document.getElementById('nav-icon-close');
+            
+            nav.classList.toggle('hidden');
+            iconMenu.classList.toggle('hidden');
+            iconClose.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

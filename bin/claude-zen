@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# claude-zen -- run Claude Code against OpenCode Zen through the local proxy.
+# Installed to ~/.local/bin/claude-zen by the installer.
+#
+# Passes the model as a CLI flag rather than an env var, because env vars in
+# ~/.claude/settings.json override environment variables.
+set -euo pipefail
+
+DIR="${ZEN_DIR:-$HOME/.zen-claude}"
+PORT="${ZEN_PORT:-8787}"
+MODEL="${ZEN_MODEL:-big-pickle}"
+
+[ -f "$DIR/start.sh" ] || {
+  echo "claude-zen: bridge not installed (run the installer first)" >&2
+  exit 1
+}
+
+STARTED=0
+if "$DIR/start.sh" status >/dev/null 2>&1; then
+  :
+else
+  "$DIR/start.sh" start
+  STARTED=1
+fi
+
+cleanup() {
+  if [ "$STARTED" = 1 ]; then
+    "$DIR/start.sh" stop >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+
+export ANTHROPIC_BASE_URL="http://127.0.0.1:$PORT"
+export ANTHROPIC_AUTH_TOKEN="claude-zen"
+unset ANTHROPIC_API_KEY
+
+args=("$@")
+if ! printf '%s\n' "$@" | grep -q -- '--model'; then
+  args+=("--model" "$MODEL")
+fi
+
+echo "claude-zen: proxy at $ANTHROPIC_BASE_URL, model $MODEL"
+exec claude "${args[@]}"

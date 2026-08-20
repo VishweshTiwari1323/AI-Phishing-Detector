@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Error {{ error.code }} - AI Phishing Detection System</title>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary selection:text-on-secondary-fixed min-h-screen flex flex-col">
+
+<div class="flex-1 flex items-center justify-center px-4">
+    <div class="text-center max-w-md">
+        <div class="mb-6">
+            <span class="material-symbols-outlined text-error text-7xl">error</span>
+        </div>
+        <h1 class="text-6xl font-bold text-error mb-4">{{ error.code }}</h1>
+        <h2 class="text-2xl font-semibold text-on-surface mb-4">{{ error.name }}</h2>
+        <p class="text-on-surface-variant mb-8">{{ error.description }}</p>
+        <a href="{{ url_for('scan') }}" class="inline-flex items-center gap-2 bg-secondary text-on-secondary-fixed px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
+            <span class="material-symbols-outlined">home</span>
+            Back to Home
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

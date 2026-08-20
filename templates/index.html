@@ -1,173 +1,689 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <title>AI Phishing Detection System - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Phishing Detection System - Next-Gen Neural Threat Analysis">
+    <title>AI Phishing Detection System - Security Gateway</title>
+    
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    
+    <!-- Tailwind CSS with Forms and Typography Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        cyber: {
+                            blue: '#1877F2',
+                            sky: '#38bdf8',
+                            cyan: '#06b6d4',
+                            dark: '#070b14',
+                            card: 'rgba(18, 22, 36, 0.68)',
+                            input: '#E8EDF8',
+                            inputFocus: '#F3F6FC'
+                        }
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+                        'scanline': 'scanlineAnim 10s linear infinite',
+                        'float': 'floating 5s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+                            '50%': { opacity: '0.8', transform: 'scale(1.05)' }
+                        },
+                        scanlineAnim: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(1000%)' }
+                        },
+                        floating: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        /* Cyberpunk City Skyline Fixed Backdrop */
+        .bg-cyberpunk-backdrop {
+            background-image: 
+                linear-gradient(to bottom, rgba(5, 7, 15, 0.72) 0%, rgba(5, 7, 15, 0.88) 100%),
+                url('https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=2000&q=80');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism Frosted Container */
+        .glass-panel {
+            background: rgba(16, 21, 37, 0.65);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.85),
+                0 18px 36px -18px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        /* Input Elements matching Screenshot */
+        .cyber-input-field {
+            background-color: #E8EDF8;
+            color: #0f172a;
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cyber-input-field:focus {
+            background-color: #F8FAFC;
+            border-color: #38bdf8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+        }
+        .cyber-input-field::placeholder {
+            color: #64748b;
+        }
+
+        /* Subtle Matrix Scanning Overlay */
+        .matrix-overlay {
+            background-image: linear-gradient(0deg, transparent 24%, rgba(56, 189, 248, 0.04) 25%, rgba(56, 189, 248, 0.04) 26%, transparent 27%, transparent 74%, rgba(56, 189, 248, 0.04) 75%, rgba(56, 189, 248, 0.04) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+        }
+
+        /* Custom Scrollbar for Terminals & Modals */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 15, 29, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+    </style>
 </head>
-<body class="bg-background text-on-background font-body-md selection:bg-secondary selection:text-on-secondary-fixed min-h-screen flex flex-col">
+<body class="bg-cyberpunk-backdrop text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-sky-500 selection:text-slate-900 relative overflow-x-hidden antialiased">
 
-<div class="matrix-grid-mesh"></div>
-<!-- AUTH SUB-SYSTEM (First state seen by user) -->
-<div id="auth-view" class="flex-1 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-  <div class="absolute w-[500px] h-[500px] bg-secondary/5 blur-[120px] rounded-full top-1/4 -z-10"></div>
-  
-  <div class="w-full max-w-md space-y-8">
-    <div class="text-center">
-      <span class="material-symbols-outlined text-primary text-5xl mb-2" style="font-variation-settings: 'FILL' 1;">shield</span>
-      <h2 class="text-center text-3xl font-bold font-headline-lg tracking-tight text-on-surface">AI Phishing Detection System</h2>
-      <p id="auth-subtitle" class="mt-2 text-center text-sm text-on-surface-variant">Sign in to access your secure diagnostics interface</p>
-    </div>
+    <!-- Interactive Background Particle / Grid Canvas -->
+    <canvas id="neural-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+    
+    <!-- Ambient Neon Lighting Glows -->
+    <div class="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-sky-500/10 rounded-full blur-[140px] pointer-events-none z-0 animate-pulse-glow"></div>
+    <div class="fixed bottom-10 right-10 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
-<!-- Login Box -->
-<div id="login-box"
-     class="mt-8 w-full max-w-md mx-auto rounded-2xl border border-white/10 bg-surface-container/80 backdrop-blur-xl shadow-2xl overflow-hidden">
-
-    <form id="login-form"
-          method="POST"
-          action="/"
-          class="p-8 flex flex-col gap-5">
-
-        <!-- Email -->
-        <div>
-            <label for="login-email"
-                   class="mb-2 block text-sm font-medium text-on-surface-variant">
-                Email Address
-            </label>
-
-            <input
-                type="email"
-                id="login-email"
-                name="email"
-                required
-                placeholder="name@ssipmt.com"
-                class="w-full rounded-xl border border-white/10 bg-surface-container-low px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition">
+    <!-- Top Telemetry Micro-HUD -->
+    <header class="relative z-10 w-full px-4 sm:px-8 py-3.5 flex items-center justify-between border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400">
+                <span class="material-symbols-outlined text-base">radar</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-xs font-mono font-bold tracking-wider text-slate-200 uppercase">NODE: AP-SOUTH-SSIPMT</span>
+                <span class="text-[10px] font-mono text-slate-400">STATUS: ZERO-TRUST ACTIVE</span>
+            </div>
         </div>
 
-        <!-- Password -->
-        <div>
-            <label for="login-password"
-                   class="mb-2 block text-sm font-medium text-on-surface-variant">
-                Password
-            </label>
-
-            <input
-                type="password"
-                id="login-password"
-                name="password"
-                required
-                placeholder="••••••••"
-                class="w-full rounded-xl border border-white/10 bg-surface-container-low px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition">
-        </div>
-
-        <!-- Login Button -->
-        <button
-            type="submit"
-            class="w-full rounded-xl bg-secondary py-3.5 text-sm font-bold text-on-secondary-fixed shadow-lg shadow-secondary/20 hover:opacity-90 active:scale-95 transition">
-            Log In
-        </button>
-
-        <!-- Divider -->
-        <div class="relative flex items-center justify-center py-2">
-            <div class="absolute left-0 right-0 h-px bg-white/10"></div>
-
-            <span class="relative bg-surface-container px-4 text-xs text-on-surface-variant">
-                Log in with social
-            </span>
-        </div>
-
-        <!-- Facebook -->
-<button
-    type="button"
-    id="fb-bypass-btn"
-    onclick="window.location.href='/scan'"
-    class="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1877F2] py-3 font-semibold text-white hover:opacity-90 active:scale-95 transition">
-
-    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.019 4.388 11.009 10.125 11.927v-8.437H7.078v-3.49h3.047V9.413c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.082 24 18.092 24 12.073z"/>
-    </svg>
-
-    Continue with Facebook
-</button>
-
-<!-- Google -->
-<button
-    type="button"
-    id="google-bypass-btn"
-    onclick="window.location.href='/scan'"
-    class="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white py-3 font-semibold text-gray-800 hover:bg-gray-100 active:scale-95 transition">
-
-    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M23.7449 12.27C23.7449 11.48 23.6749 10.73 23.5549 10H12.2549V14.51H18.7249C18.4349 15.99 17.5849 17.24 16.3249 18.09V21.09H20.1849C22.4449 19 23.7449 15.92 23.7449 12.27Z" fill="#4285F4"/>
-        <path d="M12.2549 24C15.4949 24 18.2049 22.92 20.1849 21.09L16.3249 18.09C15.2449 18.81 13.8749 19.25 12.2549 19.25C9.12492 19.25 6.47492 17.14 5.52492 14.29H1.54492V17.38C3.51492 21.3 7.56492 24 12.2549 24Z" fill="#34A853"/>
-        <path d="M5.52488 14.29C5.27488 13.57 5.14488 12.8 5.14488 12C5.14488 11.2 5.28488 10.43 5.52488 9.71V6.62H1.54488C0.724882 8.24 0.254883 10.06 0.254883 12C0.254883 13.94 0.724882 15.76 1.54488 17.38L5.52488 14.29Z" fill="#FBBC05"/>
-        <path d="M12.2549 4.75C14.0249 4.75 15.6049 5.36 16.8549 6.55L20.2749 3.13C18.2049 1.19 15.4949 0 12.2549 0C7.56492 0 3.51492 2.7 1.54492 6.62L5.52492 9.71C6.47492 6.86 9.12492 4.75 12.2549 4.75Z" fill="#EA4335"/>
-    </svg>
-
-    Continue with Google
-</button>
-    </form>
-
-    <!-- Register Footer -->
-    <div class="border-t border-white/10 bg-surface-container-high p-5 text-center">
-
-        <p class="text-sm text-on-surface-variant">
-            Don't have an account?
-
-            <button
-                type="button"
-                onclick="toggleAuthMode('signup')"
-                class="ml-1 font-semibold text-secondary hover:underline">
-                Register
+        <div class="flex items-center gap-4 text-xs font-mono">
+            <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>HEURISTICS: ONLINE</span>
+            </div>
+            <button type="button" onclick="openSystemInfoModal()" class="text-slate-400 hover:text-sky-400 transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">help_outline</span>
+                <span class="hidden md:inline text-[11px]">System Specs</span>
             </button>
-        </p>
+        </div>
+    </header>
 
+    <!-- Main Auth Center Container -->
+    <main class="relative z-10 flex-1 flex flex-col justify-center items-center px-4 py-8 sm:px-6 lg:px-8">
+        
+        <div class="w-full max-w-[440px] flex flex-col items-center">
+            
+            <!-- Header Brand Shield & Headings -->
+            <div class="flex flex-col items-center text-center mb-6 animate-float">
+                
+                <!-- Center Shield Logo -->
+                <div class="w-12 h-14 mb-3 flex items-center justify-center text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+                    <svg viewBox="0 0 24 28" fill="currentColor" class="w-11 h-11">
+                        <path d="M12 0L0 4.5V13.5C0 21.05 5.12 28.08 12 30C18.88 28.08 24 21.05 24 13.5V4.5L12 0Z"/>
+                    </svg>
+                </div>
+                
+                <!-- Main Header Title -->
+                <h1 class="text-2xl sm:text-[28px] font-extrabold tracking-tight text-white drop-shadow-md">
+                    AI Phishing Detection System
+                </h1>
+                
+                <!-- Interactive Subtitle -->
+                <p id="auth-subtitle" class="text-xs sm:text-sm text-slate-300 mt-1.5 font-medium tracking-wide">
+                    Sign in to access your secure diagnostics interface
+                </p>
+            </div>
+
+            <!-- GLASSMORPHISM AUTHENTICATION CARD -->
+            <div class="w-full glass-panel rounded-[26px] overflow-hidden relative transition-all duration-300">
+                
+                <!-- Live Scanline Bar -->
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-sky-400/5 to-transparent h-16 w-full animate-scanline pointer-events-none"></div>
+
+                <!-- 1. SIGN IN VIEW (DEFAULT) -->
+                <div id="login-box" class="p-7 sm:p-8 flex flex-col">
+                    
+                    <form id="login-form" action="{{ url_for('scan') }}" method="POST" class="flex flex-col gap-4.5" onsubmit="handleAuthSubmit(event, 'login')">
+                        
+                        <!-- Email Field -->
+                        <div class="flex flex-col gap-1.5">
+                            <label for="login-email" class="text-xs sm:text-sm font-semibold text-slate-200">
+                                Email Address
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="email" 
+                                    id="login-email" 
+                                    name="email" 
+                                    required 
+                                    autocomplete="email"
+                                    value="Admin@ssipmt.com"
+                                    placeholder="name@ssipmt.com" 
+                                    class="cyber-input-field w-full px-4 py-3 rounded-xl text-sm font-medium">
+                            </div>
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <label for="login-password" class="text-xs sm:text-sm font-semibold text-slate-200">
+                                    Password
+                                </label>
+                                <button type="button" onclick="toggleAuthMode('recovery')" class="text-xs text-sky-400 hover:text-sky-300 transition hover:underline">
+                                    Forgot?
+                                </button>
+                            </div>
+                            <div class="relative flex items-center">
+                                <input 
+                                    type="password" 
+                                    id="login-password" 
+                                    name="password" 
+                                    required 
+                                    autocomplete="current-password"
+                                    value="Admin@12345"
+                                    placeholder="••••••••" 
+                                    class="cyber-input-field w-full px-4 py-3 rounded-xl text-sm font-medium pr-10">
+                                <button 
+                                    type="button" 
+                                    onclick="togglePasswordVisibility('login-password', this)"
+                                    class="absolute right-3 text-slate-500 hover:text-slate-800 transition p-1"
+                                    aria-label="Toggle password view">
+                                    <span class="material-symbols-outlined text-lg">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Submit Log In Button -->
+                        <button 
+                            type="submit" 
+                            id="login-submit-btn"
+                            class="w-full mt-2 py-3.5 rounded-xl bg-black/40 hover:bg-black/60 active:scale-[0.99] border border-white/10 text-white font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2">
+                            <span>Log In</span>
+                        </button>
+                    </form>
+
+                    <!-- Social Login Divider -->
+                    <div class="relative flex items-center justify-center my-5">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-white/15"></div>
+                        </div>
+                        <span class="relative bg-transparent px-3 text-[11px] font-medium text-slate-300 backdrop-blur-md">
+                            Log in with social
+                        </span>
+                    </div>
+
+                    <!-- Direct Social Bypass Buttons -->
+                    <div class="flex flex-col gap-3">
+                        
+                        <!-- Facebook Bypass Button -->
+                        <button 
+                            type="button" 
+                            id="fb-bypass-btn" 
+                            onclick="navigateToScan('Facebook SSO')"
+                            class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] active:scale-[0.98] text-white font-semibold text-sm transition shadow-md">
+                            <svg class="h-5 w-5 fill-current shrink-0" viewBox="0 0 24 24">
+                                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.019 4.388 11.009 10.125 11.927v-8.437H7.078v-3.49h3.047V9.413c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.082 24 18.092 24 12.073z"/>
+                            </svg>
+                            <span>Continue with Facebook</span>
+                        </button>
+
+                        <!-- Google Bypass Button -->
+                        <button 
+                            type="button" 
+                            id="google-bypass-btn" 
+                            onclick="navigateToScan('Google OAuth')"
+                            class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-800 font-semibold text-sm transition shadow-md">
+                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24">
+                                <path d="M23.7449 12.27C23.7449 11.48 23.6749 10.73 23.5549 10H12.2549V14.51H18.7249C18.4349 15.99 17.5849 17.24 16.3249 18.09V21.09H20.1849C22.4449 19 23.7449 15.92 23.7449 12.27Z" fill="#4285F4"/>
+                                <path d="M12.2549 24C15.4949 24 18.2049 22.92 20.1849 21.09L16.3249 18.09C15.2449 18.81 13.8749 19.25 12.2549 19.25C9.12492 19.25 6.47492 17.14 5.52492 14.29H1.54492V17.38C3.51492 21.3 7.56492 24 12.2549 24Z" fill="#34A853"/>
+                                <path d="M5.52488 14.29C5.27488 13.57 5.14488 12.8 5.14488 12C5.14488 11.2 5.28488 10.43 5.52488 9.71V6.62H1.54488C0.724882 8.24 0.254883 10.06 0.254883 12C0.254883 13.94 0.724882 15.76 1.54488 17.38L5.52488 14.29Z" fill="#FBBC05"/>
+                                <path d="M12.2549 4.75C14.0249 4.75 15.6049 5.36 16.8549 6.55L20.2749 3.13C18.2049 1.19 15.4949 0 12.2549 0C7.56492 0 3.51492 2.7 1.54492 6.62L5.52492 9.71C6.47492 6.86 9.12492 4.75 12.2549 4.75Z" fill="#EA4335"/>
+                            </svg>
+                            <span>Continue with Google</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- 2. REGISTRATION VIEW -->
+                <div id="signup-box" class="p-7 sm:p-8 flex flex-col gap-4 hidden">
+                    
+                    <form id="signup-form" action="{{ url_for('scan') }}" method="POST" class="flex flex-col gap-3.5" onsubmit="handleAuthSubmit(event, 'signup')">
+                        
+                        <!-- Full Name -->
+                        <div class="flex flex-col gap-1">
+                            <label for="signup-name" class="text-xs sm:text-sm font-semibold text-slate-200">Full Name</label>
+                            <input 
+                                type="text" 
+                                id="signup-name" 
+                                name="name" 
+                                required 
+                                placeholder="Analyst John Doe" 
+                                class="cyber-input-field w-full px-4 py-2.5 rounded-xl text-sm font-medium">
+                        </div>
+
+                        <!-- Email -->
+                        <div class="flex flex-col gap-1">
+                            <label for="signup-email" class="text-xs sm:text-sm font-semibold text-slate-200">Organization Email</label>
+                            <input 
+                                type="email" 
+                                id="signup-email" 
+                                name="email" 
+                                required 
+                                placeholder="name@ssipmt.com" 
+                                class="cyber-input-field w-full px-4 py-2.5 rounded-xl text-sm font-medium">
+                        </div>
+
+                        <!-- Password + Strength Meter -->
+                        <div class="flex flex-col gap-1">
+                            <label for="signup-password" class="text-xs sm:text-sm font-semibold text-slate-200">Security Password</label>
+                            <input 
+                                type="password" 
+                                id="signup-password" 
+                                name="password" 
+                                required 
+                                oninput="checkPasswordEntropy(this.value)"
+                                placeholder="••••••••" 
+                                class="cyber-input-field w-full px-4 py-2.5 rounded-xl text-sm font-medium">
+                            
+                            <!-- Strength Indicator Bar -->
+                            <div class="pt-1.5">
+                                <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden flex gap-1">
+                                    <div id="meter-1" class="h-full w-1/3 bg-slate-700 transition-colors duration-300"></div>
+                                    <div id="meter-2" class="h-full w-1/3 bg-slate-700 transition-colors duration-300"></div>
+                                    <div id="meter-3" class="h-full w-1/3 bg-slate-700 transition-colors duration-300"></div>
+                                </div>
+                                <span id="meter-text" class="text-[10px] font-mono text-slate-400 mt-1 block">Complexity: Minimal</span>
+                            </div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            class="w-full mt-2 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-500 active:scale-[0.98] text-white font-bold text-sm transition shadow-lg flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-base">how_to_reg</span>
+                            <span>Create Account</span>
+                        </button>
+                    </form>
+
+                </div>
+
+                <!-- 3. CIPHER RECOVERY VIEW -->
+                <div id="recovery-box" class="p-7 sm:p-8 flex flex-col gap-4 hidden">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Enter your verified organizational identity. A cryptographically signed token will be dispatched to reset your session.
+                    </p>
+                    
+                    <form id="recovery-form" action="{{ url_for('scan') }}" method="POST" class="flex flex-col gap-4" onsubmit="handleAuthSubmit(event, 'recovery')">
+                        <div class="flex flex-col gap-1.5">
+                            <label for="recovery-email" class="text-xs sm:text-sm font-semibold text-slate-200">Registered Email</label>
+                            <input 
+                                type="email" 
+                                id="recovery-email" 
+                                name="email" 
+                                required 
+                                placeholder="name@ssipmt.com" 
+                                class="cyber-input-field w-full px-4 py-3 rounded-xl text-sm font-medium">
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            class="w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] border border-white/10 text-white font-bold text-sm transition shadow-lg flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-base">send</span>
+                            <span>Dispatch Recovery Token</span>
+                        </button>
+
+                        <button 
+                            type="button" 
+                            onclick="toggleAuthMode('login')" 
+                            class="text-xs text-center text-slate-400 hover:text-white transition">
+                            Back to Sign In
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Bottom Switcher Footer -->
+                <div class="bg-black/30 border-t border-white/10 p-4 text-center">
+                    <p id="toggle-footer-text" class="text-xs sm:text-sm text-slate-300 font-medium">
+                        Don't have an account? 
+                        <button type="button" onclick="toggleAuthMode('signup')" class="ml-1 text-white font-bold hover:underline transition">
+                            Register
+                        </button>
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Security Advisory Badges -->
+            <div class="flex items-center justify-center gap-4 mt-6 text-[11px] font-mono text-slate-400">
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-sky-400">lock</span>
+                    256-BIT SSL ENCRYPTION
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-emerald-400">verified</span>
+                    SOC-2 COMPLIANT
+                </span>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Toast Alert Container -->
+    <div id="toast-shelf" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- System Specs Modal Dialog -->
+    <div id="specs-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-6 relative border border-white/15">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+                <div class="flex items-center gap-2 text-sky-400 font-bold text-sm">
+                    <span class="material-symbols-outlined">memory</span>
+                    <span>NEURAL DIAGNOSTICS NODE SPECS</span>
+                </div>
+                <button type="button" onclick="closeSystemInfoModal()" class="text-slate-400 hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="space-y-3 text-xs font-mono text-slate-300">
+                <div class="flex justify-between py-1 border-b border-white/5">
+                    <span class="text-slate-400">Threat Classifier:</span>
+                    <span class="text-sky-300 font-bold">Transformer v4.2-Hybrid</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-white/5">
+                    <span class="text-slate-400">Model Inference Time:</span>
+                    <span class="text-emerald-400">~12.4 ms</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-white/5">
+                    <span class="text-slate-400">Heuristics Database:</span>
+                    <span class="text-slate-200">Synchronized (Real-time)</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-white/5">
+                    <span class="text-slate-400">Bypass Security Mode:</span>
+                    <span class="text-emerald-400">Direct Route Allowed</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="closeSystemInfoModal()" class="mt-6 w-full py-2.5 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold text-xs text-white transition">
+                Close Diagnostics
+            </button>
+        </div>
     </div>
 
-</div>
-    <!-- Signup Box -->
-    <div id="signup-box" class="mt-8 rounded-2xl border border-white/10 bg-surface-container shadow-2xl overflow-hidden hidden">
-      <form id="signup-form" method="POST" action="/login" class="p-6 md:p-8 flex flex-col gap-4">
-        <div>
-          <label for="signup-name" class="mb-2 inline-block text-sm text-on-surface-variant font-medium">Full Name</label>
-          <input type="text" id="signup-name" required class="w-full rounded-xl border border-white/10 bg-surface-container-low px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition duration-200" placeholder="John Doe" />
+    <!-- Page Footer -->
+    <footer class="relative z-10 w-full py-4 text-center border-t border-white/5 bg-slate-950/40 text-[11px] font-mono text-slate-400">
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+            <span>AI Phishing Defense Core</span>
+            <span>|</span>
+            <span>Zero-Knowledge Authentication</span>
+            <span>|</span>
+            <span class="text-sky-400 font-bold">SSIPMT SECURE GATEWAY</span>
         </div>
-        <div>
-          <label for="signup-email" class="mb-2 inline-block text-sm text-on-surface-variant font-medium">Email Address</label>
-          <input type="email" id="signup-email" required class="w-full rounded-xl border border-white/10 bg-surface-container-low px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition duration-200" placeholder="name@ssipmt.com" />
-        </div>
-        <div>
-          <label for="signup-password" class="mb-2 inline-block text-sm text-on-surface-variant font-medium">Create Password</label>
-          <input type="password" id="signup-password" required class="w-full rounded-xl border border-white/10 bg-surface-container-low px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition duration-200" placeholder="••••••••" />
-        </div>
-        <button type="submit" class="block cursor-pointer rounded-xl bg-primary px-8 py-3.5 text-center text-sm font-bold text-on-primary-fixed shadow-lg shadow-primary/10 hover:opacity-90 active:scale-[0.98] transition duration-200 w-full md:text-base">Create Account</button>
-      </form>
-      <div class="flex items-center justify-center bg-surface-container-high p-4 border-t border-white/5">
-        <p class="text-center text-sm text-on-surface-variant">Already have an account? <button type="button" onclick="toggleAuthMode('login')" class="text-secondary font-medium transition duration-100 hover:underline">Log in</button></p>
-      </div>
-    </div>
-  </div>
-</div>
+    </footer>
 
-<script>
-  function toggleAuthMode(mode) {
-    const loginBox = document.getElementById('login-box');
-    const signupBox = document.getElementById('signup-box');
-    const subtitle = document.getElementById('auth-subtitle');
-    if (mode === 'signup') {
-      loginBox.classList.add('hidden');
-      signupBox.classList.remove('hidden');
-      subtitle.textContent = 'Create an account to register with the platform';
-    } else {
-      signupBox.classList.add('hidden');
-      loginBox.classList.remove('hidden');
-      subtitle.textContent = 'Sign in to access your secure diagnostics interface';
-    }
-  }
-</script>
+    <!-- Interactive Scripts & Navigation -->
+    <script>
+        // Clean URL mapping from Flask Jinja
+        const SCAN_URL = "{{ url_for('scan') }}";
+
+        // Navigation Bypass for Social Logins
+        function navigateToScan(provider = 'Social SSO') {
+            displayToast(`Authenticating through ${provider}... routing to scan console`, 'info');
+            setTimeout(() => {
+                window.location.href = SCAN_URL;
+            }, 600);
+        }
+
+        // View Mode Switcher (Login / Signup / Recovery)
+        function toggleAuthMode(mode) {
+            const loginBox = document.getElementById('login-box');
+            const signupBox = document.getElementById('signup-box');
+            const recoveryBox = document.getElementById('recovery-box');
+            const subtitle = document.getElementById('auth-subtitle');
+            const footerText = document.getElementById('toggle-footer-text');
+
+            // Hide all sub-views
+            loginBox.classList.add('hidden');
+            signupBox.classList.add('hidden');
+            recoveryBox.classList.add('hidden');
+
+            if (mode === 'signup') {
+                signupBox.classList.remove('hidden');
+                subtitle.textContent = 'Create an analyst account to provision access';
+                footerText.innerHTML = 'Already have an account? <button type="button" onclick="toggleAuthMode(\'login\')" class="ml-1 text-white font-bold hover:underline">Log in</button>';
+            } else if (mode === 'recovery') {
+                recoveryBox.classList.remove('hidden');
+                subtitle.textContent = 'Reset your zero-knowledge credential token';
+                footerText.innerHTML = 'Remember credentials? <button type="button" onclick="toggleAuthMode(\'login\')" class="ml-1 text-white font-bold hover:underline">Sign in</button>';
+            } else {
+                loginBox.classList.remove('hidden');
+                subtitle.textContent = 'Sign in to access your secure diagnostics interface';
+                footerText.innerHTML = 'Don\'t have an account? <button type="button" onclick="toggleAuthMode(\'signup\')" class="ml-1 text-white font-bold hover:underline">Register</button>';
+            }
+        }
+
+        // Toggle Password Visibility Eye Icon
+        function togglePasswordVisibility(fieldId, triggerBtn) {
+            const input = document.getElementById(fieldId);
+            const icon = triggerBtn.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+                icon.classList.add('text-sky-600');
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+                icon.classList.remove('text-sky-600');
+            }
+        }
+
+        // Live Password Strength Indicator
+        function checkPasswordEntropy(pwd) {
+            const m1 = document.getElementById('meter-1');
+            const m2 = document.getElementById('meter-2');
+            const m3 = document.getElementById('meter-3');
+            const label = document.getElementById('meter-text');
+
+            [m1, m2, m3].forEach(el => el.className = 'h-full w-1/3 bg-slate-700 transition-colors duration-300');
+
+            if (!pwd || pwd.length === 0) {
+                label.textContent = 'Complexity: Minimal';
+                label.className = 'text-[10px] font-mono text-slate-400 mt-1 block';
+                return;
+            }
+
+            let score = 0;
+            if (pwd.length >= 6) score++;
+            if (/[A-Z]/.test(pwd) && /[0-9]/.test(pwd)) score++;
+            if (/[^A-Za-z0-9]/.test(pwd) && pwd.length >= 8) score++;
+
+            if (score === 1) {
+                m1.classList.add('bg-amber-500');
+                label.textContent = 'Complexity: Weak';
+                label.className = 'text-[10px] font-mono text-amber-400 mt-1 block';
+            } else if (score === 2) {
+                m1.classList.add('bg-sky-400');
+                m2.classList.add('bg-sky-400');
+                label.textContent = 'Complexity: Adequate';
+                label.className = 'text-[10px] font-mono text-sky-400 mt-1 block';
+            } else if (score >= 3) {
+                m1.classList.add('bg-emerald-400');
+                m2.classList.add('bg-emerald-400');
+                m3.classList.add('bg-emerald-400');
+                label.textContent = 'Complexity: High Security';
+                label.className = 'text-[10px] font-mono text-emerald-400 mt-1 block';
+            }
+        }
+
+        // Toast Feedback Dispatcher
+        function displayToast(message, type = 'info') {
+            const shelf = document.getElementById('toast-shelf');
+            const toast = document.createElement('div');
+            
+            const styles = {
+                info: 'border-sky-500/40 bg-slate-900/95 text-sky-400',
+                success: 'border-emerald-500/40 bg-slate-900/95 text-emerald-400',
+                warning: 'border-amber-500/40 bg-slate-900/95 text-amber-400'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 p-3.5 rounded-xl border ${styles[type] || styles.info} backdrop-blur-md shadow-2xl transition-all duration-300 transform translate-y-3 opacity-0 text-xs font-mono`;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined text-base">info</span>
+                <span class="text-slate-200 font-medium">${message}</span>
+            `;
+
+            shelf.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-3', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-3');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Modal Operations
+        function openSystemInfoModal() {
+            document.getElementById('specs-modal').classList.remove('hidden');
+        }
+        function closeSystemInfoModal() {
+            document.getElementById('specs-modal').classList.add('hidden');
+        }
+
+        // Form Submit Interceptor & Transition
+        function handleAuthSubmit(event, type) {
+            event.preventDefault();
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const origHtml = submitBtn.innerHTML;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <span class="material-symbols-outlined text-base animate-spin">sync</span>
+                <span>Authenticating...</span>
+            `;
+
+            displayToast('Validating cryptographic handshake...', 'info');
+
+            setTimeout(() => {
+                submitBtn.innerHTML = origHtml;
+                submitBtn.disabled = false;
+                window.location.href = SCAN_URL;
+            }, 700);
+        }
+
+        // Ambient Neural Particle Canvas Simulation
+        (function initNeuralCanvas() {
+            const canvas = document.getElementById('neural-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let w = canvas.width = window.innerWidth;
+            let h = canvas.height = window.innerHeight;
+
+            const nodes = [];
+            const count = Math.floor((w * h) / 22000);
+
+            for (let i = 0; i < count; i++) {
+                nodes.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    size: Math.random() * 1.5 + 0.5
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            });
+
+            function loop() {
+                ctx.clearRect(0, 0, w, h);
+
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const dx = nodes[i].x - nodes[j].x;
+                        const dy = nodes[i].y - nodes[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 100) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(56, 189, 248, ${0.12 * (1 - dist / 100)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.moveTo(nodes[i].x, nodes[i].y);
+                            ctx.lineTo(nodes[j].x, nodes[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                nodes.forEach(node => {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.fill();
+
+                    node.x += node.vx;
+                    node.y += node.vy;
+
+                    if (node.x < 0 || node.x > w) node.vx *= -1;
+                    if (node.y < 0 || node.y > h) node.vy *= -1;
+                });
+
+                requestAnimationFrame(loop);
+            }
+
+            loop();
+        })();
+    </script>
 </body>
 </html>

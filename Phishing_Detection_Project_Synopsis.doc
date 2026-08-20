@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #2D3748; line-height: 1.5; margin: 1in; }
+  h1 { font-size: 16pt; color: #0F2C59; border-bottom: 2px solid #1E5F74; padding-bottom: 4px; margin-top: 24px; margin-bottom: 8px; }
+  h2 { font-size: 13pt; color: #1E5F74; margin-top: 18px; margin-bottom: 6px; }
+  .title { text-align: center; font-size: 22pt; font-weight: bold; color: #0F2C59; margin-top: 30px; margin-bottom: 5px; }
+  .subtitle { text-align: center; font-size: 13pt; font-weight: bold; color: #1E5F74; margin-bottom: 25px; }
+  .meta { text-align: center; font-size: 11pt; color: #4A5568; margin-bottom: 40px; }
+  p { text-align: justify; margin-bottom: 10px; }
+  ul, ol { margin-top: 5px; margin-bottom: 12px; padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px; font-size: 10pt; }
+  th { background-color: #0F2C59; color: #FFFFFF; font-weight: bold; text-align: left; padding: 8px 10px; border: 1px solid #CBD5E1; }
+  td { padding: 8px 10px; border: 1px solid #CBD5E1; vertical-align: top; }
+  tr:nth-child(even) td { background-color: #F8FAFC; }
+  .diagram { background-color: #0B1325; color: #38BDF8; font-family: Consolas, monospace; font-size: 8.5pt; padding: 14px; border-radius: 6px; white-space: pre; line-height: 1.25; margin: 12px 0; }
+  .caption { text-align: center; font-size: 9.5pt; font-style: italic; color: #64748B; margin-top: 4px; margin-bottom: 16px; }
+  .page-break { page-break-after: always; }
+</style>
+</head>
+<body>
+
+<div class="title">PROJECT SYNOPSIS</div>
+<div class="subtitle">Real-Time AI Phishing Detection System Using Machine Learning and Full-Stack Flask Architecture</div>
+<div class="meta">
+  Submitted in partial fulfillment of the requirements for the Degree of<br>
+  <strong>Bachelor of Technology in Computer Science & Engineering</strong><br><br>
+  <strong>Domain:</strong> Cybersecurity / Machine Learning / Full-Stack Web Development<br>
+  <strong>Candidate:</strong> [Your Name] &nbsp;|&nbsp; <strong>Roll No:</strong> [Your Enrollment No]<br>
+  Department of Computer Science & Engineering<br>
+  [College / University Name]<br>
+  Academic Year 2025–2026
+</div>
+
+<div class="page-break"></div>
+
+<h1>Abstract</h1>
+<p>Phishing remains one of the most pervasive cyber threats, exploiting human psychology to harvest credentials, financial data, and personally identifiable information through deceptive URLs that closely mimic legitimate platforms[cite: 1]. Traditional signature-based and static blacklist mechanisms suffer from a critical detection lag against modern evasion techniques—such as newly registered zero-day domains, fast-flux DNS rotation, and short-lived phishing sites active for only a few hours[cite: 1].</p>
+<p>This project presents an end-to-end, machine learning-driven Phishing Detection System delivered as a production-ready, full-stack web application[cite: 1]. The system employs an optimized Natural Language Processing (NLP) feature-extraction pipeline that parses raw URLs, tokenizes lexical components, and vectors inputs using a serialized feature vectorizer (<code>vectorizer.pkl</code>)[cite: 1]. A Multinomial Naive Bayes classifier (<code>phishing_mnb.pkl</code>) performs high-throughput binary classification—categorizing targets as "Legitimate" or "Phishing"—with sub-second inference latency[cite: 1].</p>
+<p>The platform is built on a modular Flask backend providing single-URL real-time inspection, multi-threaded batch scanning, custom authentication middleware (<code>auth_middleware.py</code>), an interactive telemetry dashboard (<code>dashboard.html</code>), and persistent relational logging of user scan histories (<code>models.py</code>, <code>init_db.py</code>)[cite: 1]. Evaluated across a dataset of over 500,000 verified URLs (<code>phishing_site_urls.csv</code>), the platform achieves high precision and minimal false-positive rates, presenting a lightweight, self-contained solution for active web defense[cite: 1].</p>
+
+<h1>1. Introduction</h1>
+<p>The expansion of online banking, cloud platforms, and digital enterprise infrastructure has elevated social engineering attacks into a primary cybersecurity vector[cite: 1]. Attackers routinely spoof trusted brand domains, clone visual interfaces, and distribute fraudulent URLs across emails, instant messaging, and poisoned search results[cite: 1]. Because phishing exploits human trust rather than underlying software flaws, it consistently bypasses perimeter firewalls and endpoint filters[cite: 1].</p>
+<p>Centralized domain blacklists (e.g., Google Safe Browsing, PhishTank) exhibit an inherent detection latency: ephemeral phishing domains frequently complete their credential-harvesting lifecycle and shut down before security crawlers can catalog them[cite: 1]. Machine learning models mitigate this vulnerability by identifying invariant structural, lexical, and statistical patterns across URLs rather than relying exclusively on domain reputation[cite: 1]. This project implements a complete, self-hosted web security platform integrating rapid URL feature parsing, probabilistic Bayesian inference, batch processing, and user audit tracking[cite: 1].</p>
+
+<h1>2. Problem Statement</h1>
+<p>Current threat prevention tools available to everyday users and small teams present significant trade-offs[cite: 1]:</p>
+<ul>
+  <li><strong>Blacklist Latency:</strong> Inability of static domain registries to prevent zero-day attacks during early deployment hours[cite: 1].</li>
+  <li><strong>Inference Latency & Compute Overhead:</strong> Heavy deep learning architectures and dynamic headless browser rendering tools introduce high computational latency, making them impractical for real-time interactive checks[cite: 1].</li>
+  <li><strong>Lack of Batch Telemetry:</strong> Standard security extensions focus solely on single, active browser tabs, omitting bulk inspection and personal scan auditing tools[cite: 1].</li>
+  <li><strong>Opaque Risk Reporting:</strong> Users receive binary block notices without actionable diagnostic context detailing why a link was flagged[cite: 1].</li>
+</ul>
+
+<h1>3. Literature Survey</h1>
+<table>
+  <tr>
+    <th style="width: 30%;">Reference & Source</th>
+    <th style="width: 35%;">Approach & Methodology</th>
+    <th style="width: 35%;">Key Findings & Project Relevance</th>
+  </tr>
+  <tr>
+    <td><strong>IEEE Conf. Pub. (2024)</strong><br><em>Phishing Detection Using ML</em>[cite: 1]</td>
+    <td>Evaluated SVM, Random Forest, Decision Tree, Logistic Regression, KNN, and AdaBoost on lexical URL features[cite: 1].</td>
+    <td>Ensemble methods achieved high accuracy (>95%), but introduced notable inference latency in real-time execution pipelines[cite: 1].</td>
+  </tr>
+  <tr>
+    <td><strong>Zara et al. (IEEE Access, 2024)</strong><br><em>Deep Learning Phishing Detection</em>[cite: 1]</td>
+    <td>Applied Information Gain, PCA, and deep network architectures across 11,055 URLs[cite: 1].</td>
+    <td>Demonstrated that rigorous lexical feature selection influences detection accuracy more significantly than model depth[cite: 1].</td>
+  </tr>
+  <tr>
+    <td><strong>IEEE Conf. Pub. (2023)</strong><br><em>Detection of Phishing Websites</em>[cite: 1]</td>
+    <td>Evaluated XGBoost, Random Forest, Naive Bayes, and MLPs on 11,430 URLs across 86 extracted features[cite: 1].</td>
+    <td>XGBoost reached peak accuracy (~96.6%), while Multinomial Naive Bayes delivered sub-millisecond query execution with low memory consumption[cite: 1].</td>
+  </tr>
+  <tr>
+    <td><strong>Chiew et al. (Info Sciences, 2019)</strong><br><em>Hybrid Feature Selection</em>[cite: 1]</td>
+    <td>Designed a multi-stage feature selection framework to remove redundant URL tokens[cite: 1].</td>
+    <td>Proved that reducing token dimensionality enhances model generalization on previously unseen, zero-day phishing domains[cite: 1].</td>
+  </tr>
+</table>
+<div class="caption">Table 1: Comparative Literature Review of Machine Learning Phishing Detection[cite: 1]</div>
+
+<h1>4. Project Objectives</h1>
+<ol>
+  <li><strong>Data Ingestion & Sanitization:</strong> Preprocess and balance a corpus of 500,000+ URLs (<code>phishing_site_urls.csv</code>), normalizing character encodings and stripping transport protocol prefixes[cite: 1].</li>
+  <li><strong>Feature Engineering:</strong> Build a specialized lexical tokenizer and feature vectorizer (<code>vectorizer.pkl</code>) to capture token distributions, structural delimiters, and URL path depths[cite: 1].</li>
+  <li><strong>Model Optimization & Serialization:</strong> Train and tune a Multinomial Naive Bayes classifier (<code>phishing_mnb.pkl</code>) for rapid binary classification with low false-positive rates[cite: 1].</li>
+  <li><strong>Full-Stack Application Development:</strong> Construct a modular Flask web platform (<code>app.py</code>, <code>config.py</code>) supporting real-time single-URL scanning and bulk batch operations[cite: 1].</li>
+  <li><strong>Access Control & Session Management:</strong> Implement secure session verification (<code>auth_middleware.py</code>) and persistent relational database logging (<code>models.py</code>, <code>init_db.py</code>)[cite: 1].</li>
+  <li><strong>Modern Cybersecurity UI:</strong> Design an interactive, responsive frontend (<code>dashboard.html</code>, <code>scan.html</code>, <code>batch_scan.html</code>) styled with modern cyber-themed glassmorphism[cite: 1].</li>
+  <li><strong>Security Verification & Unit Testing:</strong> Conduct structured security audits and validation suites (<code>test_security.py</code>, <code>tests.py</code>) to verify system stability and input safety[cite: 1].</li>
+</ol>
+
+<h1>5. Proposed Methodology & Architecture</h1>
+<h2>5.1 Offline Machine Learning Training Pipeline</h2>
+<div class="diagram"> ┌──────────────────────────────────────────────────────────┐
+ │         Dataset Acquisition (phishing_site_urls.csv)     │
+ └────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+ ┌──────────────────────────────────────────────────────────┐
+ │     Data Sanitization, Deduplication & Label Encoding    │
+ └────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+ ┌──────────────────────────────────────────────────────────┐
+ │   Lexical Parsing & Tokenization (Delimiters & Paths)    │
+ └────────────────────────────┬─────────────────────────────┘
+                              │
+                              ▼
+ ┌──────────────────────────────────────────────────────────┐
+ │    Feature Vectorization (TF-IDF / N-gram Extraction)    │
+ └────────────────────────────┬─────────────────────────────┘
+                              │
+               ┌──────────────┴──────────────┐
+               ▼                             ▼
+   ┌───────────────────────┐     ┌───────────────────────┐
+   │ Training Set (80%)    │     │ Testing Set (20%)     │
+   └───────────┬───────────┘     └───────────┬───────────┘
+               │                             │
+               ▼                             │
+   ┌───────────────────────┐                 │
+   │ Multinomial Naive     │                 │
+   │ Bayes Classifier      │                 │
+   └───────────┬───────────┘                 │
+               │                             │
+               ▼                             ▼
+   ┌─────────────────────────────────────────────────────┐
+   │ Performance Validation (Accuracy, Precision, F1)    │
+   └───────────────────────────┬─────────────────────────┘
+                               │
+                               ▼
+ ┌──────────────────────────────────────────────────────────┐
+ │  Model Serialization: vectorizer.pkl & phishing_mnb.pkl  │
+ └──────────────────────────────────────────────────────────┘</div>
+<div class="caption">Figure 1: Machine Learning Development and Model Serialization Pipeline[cite: 1]</div>
+
+<h2>5.2 Online Full-Stack Application Architecture</h2>
+<div class="diagram">           ┌──────────────────────────────────────────────┐
+           │ Client Browser (Chrome / Edge / Firefox)     │
+           │ • Single Scan  • Batch Scan  • Dashboard     │
+           └──────────────────────┬───────────────────────┘
+                                  │ HTTP POST (JSON / Form Data)
+                                  ▼
+           ┌──────────────────────────────────────────────┐
+           │        Flask Application Controller          │
+           │                  (app.py)                    │
+           └───────┬──────────────┬──────────────┬────────┘
+                   │              │              │
+        ┌──────────┴──┐    ┌──────┴──────┐ ┌─────┴──────────┐
+        ▼             │    ▼             │ ▼                │
+  [ Auth Middleware ] │  [ Single Scan ] │ [ Batch Engine ] │
+  (Session Security)  │  (/scan Route)   │ (/batch Route)   │
+        │             │           │      │        │         │
+        │             │           └──────┬────────┘         │
+        │             │                  ▼                  │
+        │             │      [ Lexical Feature Parser ]     │
+        │             │                  │                  │
+        │             │                  ▼                  │
+        │             │      [ vectorizer.pkl Match ]       │
+        │             │                  │                  │
+        │             │                  ▼                  │
+        │             │      [ phishing_mnb.pkl Query ]     │
+        │             │                  │                  │
+        │             │                  ▼                  │
+        │             │      [ Threat Score & Verdict ]     │
+        │             │                  │                  │
+        ▼             ▼                  ▼                  ▼
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │              Database Storage Layer (models.py / SQLite)                 │
+ │              • User Accounts  • Scan Logs  • Threat Metrics              │
+ └────────────────────────────────────┬─────────────────────────────────────┘
+                                      │
+                                      ▼
+           ┌──────────────────────────────────────────────┐
+           │ Dynamic UI Rendering (dashboard.html)        │
+           │ Live Confidence Scores & Threat Diagnostics  │
+           └──────────────────────────────────────────────┘</div>
+<div class="caption">Figure 2: Real-Time Web Application & Inference Architecture[cite: 1]</div>
+
+<h1>6. Hardware & Software Requirements</h1>
+<table>
+  <tr>
+    <th style="width: 30%;">Category</th>
+    <th style="width: 30%;">Component</th>
+    <th style="width: 40%;">Specification</th>
+  </tr>
+  <tr>
+    <td><strong>Software</strong></td>
+    <td>Backend Framework[cite: 1]</td>
+    <td>Python 3.10+, Flask, Werkzeug, Jinja2 Templates[cite: 1]</td>
+  </tr>
+  <tr>
+    <td><strong>Software</strong></td>
+    <td>Machine Learning Stack[cite: 1]</td>
+    <td>Scikit-Learn, NumPy, Pandas, Joblib/Pickle[cite: 1]</td>
+  </tr>
+  <tr>
+    <td><strong>Software</strong></td>
+    <td>Serialized Artifacts[cite: 1]</td>
+    <td><code>vectorizer.pkl</code>, <code>phishing_mnb.pkl</code>[cite: 1]</td>
+  </tr>
+  <tr>
+    <td><strong>Software</strong></td>
+    <td>Database & Auth[cite: 1]</td>
+    <td>SQLite3 / SQLAlchemy ORM, Custom Middleware (<code>auth_middleware.py</code>)[cite: 1]</td>
+  </tr>
+  <tr>
+    <td><strong>Software</strong></td>
+    <td>Frontend Technologies[cite: 1]</td>
+    <td>HTML5, Modern CSS3 (<code>cyber-noir-theme.css</code>), Vanilla JavaScript[cite: 1]</td>
+  </tr>
+  <tr>
+    <td><strong>Hardware</strong></td>
+    <td>Processor[cite: 1]</td>
+    <td>Intel Core i3 / AMD Ryzen 3 or higher (x86_64 / ARM64)[cite: 1]</td>
+  </tr>
+  <tr>
+    <td><strong>Hardware</strong></td>
+    <td>Memory & Storage[cite: 1]</td>
+    <td>Minimum: 4 GB RAM | 2 GB Available Storage[cite: 1]</td>
+  </tr>
+</table>
+<div class="caption">Table 2: Hardware and Software System Environment[cite: 1]</div>
+
+<h1>7. Expected Outcomes</h1>
+<ul>
+  <li><strong>Sub-50ms Evaluation:</strong> Real-time URL threat assessment suitable for active browser inspection and responsive web workflows[cite: 1].</li>
+  <li><strong>Automated Batch Processing:</strong> High-throughput batch scanning module capable of evaluating hundreds of URLs concurrently from plain text or CSV uploads[cite: 1].</li>
+  <li><strong>Persistent Security Audit Trail:</strong> Account-based database logging providing users with an itemized history of past scans and threat telemetry[cite: 1].</li>
+  <li><strong>Zero-Day Threat Interception:</strong> Reliable classification of unlisted, freshly registered phishing URLs based strictly on statistical and lexical signatures[cite: 1].</li>
+</ul>
+
+<h1>8. References</h1>
+<p>[1] U. Zara, K. Ayyub, H. U. Khan, A. Daud, T. Alsahfi, and S. G. Ahmad, "Phishing Website Detection Using Deep Learning Models," <em>IEEE Access</em>, vol. 12, pp. 167072–167087, 2024[cite: 1].</p>
+<p>[2] K. L. Chiew, C. L. Tan, K. Wong, K. S. Yong, and W. K. Tiong, "A New Hybrid Ensemble Feature Selection Framework for Machine Learning-Based Phishing Detection System," <em>Information Sciences</em>, vol. 484, pp. 153–166, 2019[cite: 1].</p>
+<p>[3] A. Das, S. Baki, A. El Aassal, R. M. Verma, and A. Dunbar, "SoK: A Comprehensive Reexamination of Phishing Research From the Security Perspective," <em>IEEE Communications Surveys & Tutorials</em>, vol. 22, no. 1, pp. 671–708, 2020[cite: 1].</p>
+<p>[4] A. Kulkarni et al., "Phishing Websites Detection using Machine Learning," <em>International Journal of Advanced Computer Science and Applications (IJACSA)</em>, vol. 10, no. 7, 2019[cite: 1].</p>
+<p>[5] A. El Aassal, S. Baki, A. Das, and R. M. Verma, "An In-Depth Benchmarking and Evaluation of Phishing Detection Research for Security Needs," <em>IEEE Access</em>, vol. 8, pp. 22170–22192, 2020[cite: 1].</p>
+<p>[6] K. L. Chiew, K. S. C. Yong, and C. L. Tan, "A Survey of Phishing Attacks: Their Types, Vectors and Technical Approaches," <em>Expert Systems with Applications</em>, vol. 106, pp. 1–20, 2018[cite: 1].</p>
+
+</body>
+</html>
