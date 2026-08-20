@@ -13,35 +13,63 @@ import requests
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Configure Flask with explicit template & static directories
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
+)
+
+# ---------------- WSGI PATH FIX FOR VERCEL ----------------
+class VercelPathMiddleware:
+    """Strips /api/index.py from incoming Vercel rewritten paths so Flask routes match."""
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        for prefix in ("/api/index.py", "/api/index", "/api"):
+            if path.startswith(prefix):
+                environ["PATH_INFO"] = path[len(prefix):] or "/"
+                break
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
 
 # ---------------- CONFIGURATION & DATABASE SETUP ----------------
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-insecure-key-change-me"
 )
-# Set the writable SQLite path in /tmp for Vercel
-if os.environ.get('VERCEL') or not os.access('.', os.W_OK):
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/phishing.db'
+
+# Set writable SQLite path in /tmp for Vercel Serverless
+if os.environ.get("VERCEL") or not os.access(".", os.W_OK):
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/phishing.db"
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
     )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Connect SQLAlchemy to the Flask app and create tables
+# Connect SQLAlchemy and create tables inside app context
 db.init_app(app)
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        logger.warning(f"Database init warning: {e}")
 
 app.jinja_env.globals["hasattr"] = hasattr
 
 # ---------------- MODEL LOADING ----------------
 
 VECTORIZER_PATH = os.path.join(BASE_DIR, "vectorizer.pkl")
-MODEL_PATH = os.path.join(BASE_DIR, "phishing.pkl")
+# Handles both 'phishing_mnb.pkl' and 'phishing.pkl'
+MODEL_PATH = os.path.join(BASE_DIR, "phishing_mnb.pkl")
+if not os.path.exists(MODEL_PATH):
+    MODEL_PATH = os.path.join(BASE_DIR, "phishing.pkl")
 
 vector = None
 model = None
@@ -54,7 +82,7 @@ try:
             model = pickle.load(f)
         logger.info("ML models loaded successfully.")
     else:
-        logger.warning("Model or vectorizer file not found.")
+        logger.warning(f"Model or vectorizer file not found at: {MODEL_PATH}")
 except Exception as e:
     logger.error(f"Failed to load ML models: {e}")
 
@@ -66,7 +94,6 @@ VT_API_KEY = os.environ.get(
 ).strip()
 
 # ---------------- HELPER UTILITIES ----------------
-
 
 def validate_url(url: str):
     """Validates and formats the input URL."""
@@ -192,11 +219,9 @@ def evaluate_vt_result(vt_data: dict):
 
 
 # ---------------- ROUTE HANDLERS ----------------
-@app.route('/')
-def home():
-    return render_template('index.html') # or 'landing.html'
 
 @app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -310,7 +335,6 @@ def batch_scan():
             suspicious_count = vt.get("suspicious", 0)
             harmless_count = vt.get("harmless", 0)
 
-            # Persist each batch scan to history
             try:
                 scan_record = ScanHistory(
                     url=validated_url,
@@ -338,7 +362,6 @@ def batch_scan():
                 }
             )
 
-        # Commit all batch records in a single transaction
         try:
             db.session.commit()
         except Exception as e:
@@ -405,11 +428,6 @@ def dashboard():
 
 @app.route("/api/scan", methods=["POST"])
 def api_scan():
-    """API endpoint for scanning a single URL.
-
-    Expects JSON body: {"url": "https://example.com"}
-    Returns JSON with ML prediction, VirusTotal results, and saved scan record ID.
-    """
     if not request.is_json:
         return jsonify({"error": "Missing JSON body"}), 400
 
@@ -427,12 +445,7 @@ def api_scan():
     cleaned_url = re.sub(r"^https?://(www\.)?", "", validated_url)
 
     ml_result, confidence = perform_ml_prediction(cleaned_url)
-    if ml_result == "Phishing Website":
-        predict_ui = "Phishing Website"
-    elif ml_result == "Safe Website":
-        predict_ui = "Safe Website"
-    else:
-        predict_ui = "Unknown"
+    predict_ui = "Phishing Website" if ml_result == "Phishing Website" else ("Safe Website" if ml_result == "Safe Website" else "Unknown")
 
     vt = check_virustotal(validated_url)
     vt_result = evaluate_vt_result(vt)
@@ -441,7 +454,6 @@ def api_scan():
     harmless = vt.get("harmless", 0)
     undetected = vt.get("undetected", 0)
 
-    # Persist API scan to database
     scan_id = None
     try:
         scan_record = ScanHistory(
