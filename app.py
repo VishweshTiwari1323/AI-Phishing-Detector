@@ -22,9 +22,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-insecure-key-change-me"
 )
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
-)
+# Set the writable SQLite path in /tmp for Vercel
+if os.environ.get('VERCEL') or not os.access('.', os.W_OK):
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/phishing.db'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'phishing.db')}"
+    )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Connect SQLAlchemy to the Flask app and create tables
