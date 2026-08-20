@@ -30,10 +30,15 @@ else:
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Connect SQLAlchemy to the Flask app and create tables
+# Connect SQLAlchemy to the Flask app
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+
+# Create tables only if not already created (for local development)
+# In Vercel serverless, we skip db.create_all() to avoid filesystem issues
+# Tables should be created via migration or initial setup script
+if not os.environ.get("VERCEL"):
+    with app.app_context():
+        db.create_all()
 
 app.jinja_env.globals["hasattr"] = hasattr
 
