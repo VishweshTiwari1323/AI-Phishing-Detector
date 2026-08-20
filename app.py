@@ -15,25 +15,29 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Configure Flask with explicit template & static directories
 app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
     static_folder=os.path.join(BASE_DIR, "static"),
 )
 
-# ---------------- WSGI PATH FIX FOR VERCEL ----------------
+# ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
 class VercelPathMiddleware:
-    """Strips /api/index.py from incoming Vercel rewritten paths so Flask routes match."""
+    """Translates Vercel's rewritten paths into matching Flask routes."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        path = environ.get("PATH_INFO", "")
-        for prefix in ("/api/index.py", "/api/index", "/api"):
-            if path.startswith(prefix):
-                environ["PATH_INFO"] = path[len(prefix):] or "/"
-                break
+        matched_path = environ.get("HTTP_X_MATCHED_PATH") or environ.get("HTTP_X_VERCEL_MATCHED_PATH")
+        if matched_path:
+            environ["PATH_INFO"] = matched_path
+        else:
+            path = environ.get("PATH_INFO", "")
+            for prefix in ("/app.py", "/app", "/api/index.py", "/api"):
+                if path.startswith(prefix):
+                    rest = path[len(prefix):]
+                    environ["PATH_INFO"] = rest if rest.startswith("/") else "/" + rest
+                    break
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
@@ -53,7 +57,6 @@ else:
     )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Connect SQLAlchemy and create tables inside app context
 db.init_app(app)
 with app.app_context():
     try:
@@ -66,7 +69,6 @@ app.jinja_env.globals["hasattr"] = hasattr
 # ---------------- MODEL LOADING ----------------
 
 VECTORIZER_PATH = os.path.join(BASE_DIR, "vectorizer.pkl")
-# Handles both 'phishing_mnb.pkl' and 'phishing.pkl'
 MODEL_PATH = os.path.join(BASE_DIR, "phishing_mnb.pkl")
 if not os.path.exists(MODEL_PATH):
     MODEL_PATH = os.path.join(BASE_DIR, "phishing.pkl")
@@ -82,7 +84,7 @@ try:
             model = pickle.load(f)
         logger.info("ML models loaded successfully.")
     else:
-        logger.warning(f"Model or vectorizer file not found at: {MODEL_PATH}")
+        logger.warning(f"Model or vectorizer not found at: {MODEL_PATH}")
 except Exception as e:
     logger.error(f"Failed to load ML models: {e}")
 
@@ -222,6 +224,8 @@ def evaluate_vt_result(vt_data: dict):
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
+@app.route("/app.py", methods=["GET", "POST"])
+@app.route("/app", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -267,7 +271,6 @@ def scan():
             vendors = vt.get("vendors", {})
             vt_result = evaluate_vt_result(vt)
 
-            # Persist single scan
             try:
                 scan_record = ScanHistory(
                     url=url,
@@ -445,7 +448,11 @@ def api_scan():
     cleaned_url = re.sub(r"^https?://(www\.)?", "", validated_url)
 
     ml_result, confidence = perform_ml_prediction(cleaned_url)
-    predict_ui = "Phishing Website" if ml_result == "Phishing Website" else ("Safe Website" if ml_result == "Safe Website" else "Unknown")
+    predict_ui = (
+        "Phishing Website"
+        if ml_result == "Phishing Website"
+        else ("Safe Website" if ml_result == "Safe Website" else "Unknown")
+    )
 
     vt = check_virustotal(validated_url)
     vt_result = evaluate_vt_result(vt)
