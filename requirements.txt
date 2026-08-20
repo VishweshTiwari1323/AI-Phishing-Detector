@@ -38,3 +38,6 @@ wordcloud==1.9.6
 Flask-WTF
 email-validator
 WTForms
+Flask-Login
+Flask-SQLAlchemy
+Flask-Bcrypt
