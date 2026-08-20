@@ -21,61 +21,63 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "static"),
 )
 
-# ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
+# ---------------- ROBUST VERCEL WSGI PATH MIDDLEWARE ----------------
 class VercelPathMiddleware:
-    """Accurately extracts the real browser URL on Vercel Serverless."""
+    """Accurately maps real browser routes on Vercel serverless."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        # 1. Look for the true original request path from Vercel headers
-        raw_uri = (
-            environ.get("HTTP_X_FORWARDED_URI")
-            or environ.get("HTTP_X_ORIGINAL_URL")
-            or environ.get("REQUEST_URI")
-            or environ.get("RAW_URI")
-            or ""
-        )
+        target_path = None
 
-        # 2. Check Vercel's regex match capture (e.g. "1=scan" -> "/scan")
-        route_match = (
-            environ.get("HTTP_X_NOW_ROUTE_MATCHES")
-            or environ.get("HTTP_X_VERCEL_ROUTE_MATCHES")
-            or ""
-        )
-
-        path = ""
-        if raw_uri:
-            if "://" in raw_uri:
-                path = urlparse(raw_uri).path
-            else:
-                path = raw_uri.split("?")[0]
-        elif route_match and "1=" in route_match:
-            matched_val = route_match.split("1=", 1)[1].split("&")[0]
-            path = "/" + unquote(matched_val).lstrip("/")
-        else:
-            path = environ.get("PATH_INFO", "/")
-
-        # 3. Strip internal Vercel serverless entrypoint prefixes
-        for prefix in ("/api/index.py", "/api/index", "/app.py", "/app", "/api"):
-            if path == prefix or path.startswith(prefix + "/"):
-                path = path[len(prefix):] or "/"
+        # Inspect headers for the real client URL
+        for header in (
+            "HTTP_X_FORWARDED_URI",
+            "HTTP_X_ORIGINAL_URL",
+            "HTTP_X_ORIGINAL_URI",
+            "HTTP_X_REWRITE_URL",
+            "REQUEST_URI",
+            "RAW_URI",
+        ):
+            val = environ.get(header)
+            if val:
+                target_path = val.split("?")[0]
                 break
 
-        if not path or not path.startswith("/"):
-            path = "/" + path.lstrip("/")
+        # Check matched path if not pointing to internal serverless entrypoint
+        if not target_path:
+            matched = environ.get("HTTP_X_MATCHED_PATH")
+            if matched and not matched.startswith(("/api", "/app.py")):
+                target_path = matched.split("?")[0]
 
-        environ["PATH_INFO"] = path
+        if not target_path:
+            target_path = environ.get("PATH_INFO", "/")
+
+        # Strip protocol/host if full URL was received
+        if "://" in target_path:
+            target_path = urlparse(target_path).path
+
+        # Strip internal Vercel serverless script prefixes
+        for prefix in ("/api/index.py", "/api/index", "/app.py", "/app"):
+            if target_path == prefix:
+                target_path = "/"
+                break
+            elif target_path.startswith(prefix + "/"):
+                target_path = target_path[len(prefix):] or "/"
+                break
+
+        if not target_path.startswith("/"):
+            target_path = "/" + target_path
+
+        environ["PATH_INFO"] = target_path
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
 
 # ---------------- CONFIGURATION & DATABASE SETUP ----------------
 
-app.config["SECRET_KEY"] = os.environ.get(
-    "SECRET_KEY", "dev-insecure-key-change-me"
-)
-app.config["WTF_CSRF_ENABLED"] = False
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-insecure-key-change-me")
+app.config["WTF_CSRF_ENABLED"] = False  # Allows form login to proceed without CSRF failure
 
 # Set writable SQLite path in /tmp for Vercel Serverless
 if os.environ.get("VERCEL") or not os.access(".", os.W_OK):
@@ -127,7 +129,6 @@ VT_API_KEY = os.environ.get(
 # ---------------- HELPER UTILITIES ----------------
 
 def validate_url(url: str):
-    """Validates and formats the input URL."""
     if not url or len(url.strip()) < 4:
         return False, "URL is too short"
 
@@ -145,7 +146,6 @@ def validate_url(url: str):
 
 
 def perform_ml_prediction(cleaned_url: str):
-    """Performs inference using the loaded Vectorizer and ML Model."""
     if not model or not vector:
         return "Model not loaded", 0.0
 
@@ -171,7 +171,6 @@ def perform_ml_prediction(cleaned_url: str):
 
 
 def check_virustotal(url: str):
-    """Queries the VirusTotal API v3 for URL telemetry."""
     empty_result = {
         "status": "VirusTotal API Key Missing" if not VT_API_KEY else "Error",
         "malicious": 0,
@@ -230,7 +229,6 @@ def check_virustotal(url: str):
 
 
 def evaluate_vt_result(vt_data: dict):
-    """Generates standardized verdict labels from VirusTotal responses."""
     status = vt_data.get("status")
     if status == "Submitted for scanning":
         return "URL submitted to VirusTotal. Try again in a few seconds."
@@ -337,7 +335,7 @@ def batch_scan():
     results = []
 
     if request.method == "POST":
-        raw_text = request.form.get("urls", "") or form.urls.data or ""
+        raw_text = request.form.get("urls", "") or (form.urls.data if form.urls.data else "")
         urls = [u.strip() for u in raw_text.splitlines() if u.strip()]
 
         for u in urls[:25]:
