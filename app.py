@@ -3,7 +3,7 @@ import logging
 import os
 import pickle
 import re
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from forms import BatchScanForm, LoginForm, SignupForm, URLScanForm
@@ -23,30 +23,49 @@ app = Flask(
 
 # ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
 class VercelPathMiddleware:
-    """Extracts the actual requested URL from Vercel headers so sub-routes work."""
+    """Accurately extracts the real browser URL on Vercel Serverless."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        raw_path = (
-            environ.get("HTTP_X_MATCHED_PATH")
-            or environ.get("HTTP_X_FORWARDED_PATH")
-            or environ.get("HTTP_X_ORIGINAL_URI")
+        # 1. Look for the true original request path from Vercel headers
+        raw_uri = (
+            environ.get("HTTP_X_FORWARDED_URI")
+            or environ.get("HTTP_X_ORIGINAL_URL")
+            or environ.get("REQUEST_URI")
             or environ.get("RAW_URI")
-            or environ.get("PATH_INFO", "")
+            or ""
         )
-        
-        raw_path = raw_path.split("?")[0]
 
-        for prefix in ("/api/index.py", "/api/index", "/api", "/app.py", "/app"):
-            if raw_path.startswith(prefix):
-                raw_path = raw_path[len(prefix):] or "/"
+        # 2. Check Vercel's regex match capture (e.g. "1=scan" -> "/scan")
+        route_match = (
+            environ.get("HTTP_X_NOW_ROUTE_MATCHES")
+            or environ.get("HTTP_X_VERCEL_ROUTE_MATCHES")
+            or ""
+        )
+
+        path = ""
+        if raw_uri:
+            if "://" in raw_uri:
+                path = urlparse(raw_uri).path
+            else:
+                path = raw_uri.split("?")[0]
+        elif route_match and "1=" in route_match:
+            matched_val = route_match.split("1=", 1)[1].split("&")[0]
+            path = "/" + unquote(matched_val).lstrip("/")
+        else:
+            path = environ.get("PATH_INFO", "/")
+
+        # 3. Strip internal Vercel serverless entrypoint prefixes
+        for prefix in ("/api/index.py", "/api/index", "/app.py", "/app", "/api"):
+            if path == prefix or path.startswith(prefix + "/"):
+                path = path[len(prefix):] or "/"
                 break
 
-        if not raw_path.startswith("/"):
-            raw_path = "/" + raw_path
+        if not path or not path.startswith("/"):
+            path = "/" + path.lstrip("/")
 
-        environ["PATH_INFO"] = raw_path
+        environ["PATH_INFO"] = path
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
@@ -56,7 +75,7 @@ app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-insecure-key-change-me"
 )
-app.config["WTF_CSRF_ENABLED"] = False  # Allows standard form submission
+app.config["WTF_CSRF_ENABLED"] = False
 
 # Set writable SQLite path in /tmp for Vercel Serverless
 if os.environ.get("VERCEL") or not os.access(".", os.W_OK):
