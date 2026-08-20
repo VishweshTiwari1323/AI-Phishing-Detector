@@ -35,7 +35,7 @@ tzdata==2026.3
 urllib3==2.7.0
 Werkzeug==3.1.8
 wordcloud==1.9.6
-Flask-WTF
+
 email-validator
 WTForms
 Flask-Login
