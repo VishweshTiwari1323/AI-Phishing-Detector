@@ -23,32 +23,30 @@ app = Flask(
 
 # ---------------- VERCEL WSGI PATH ROUTING FIX ----------------
 class VercelPathMiddleware:
-    """Extracts the actual browser requested path from Vercel headers."""
+    """Extracts the actual requested URL from Vercel headers so sub-routes work."""
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        # 1. Prefer headers that contain the real incoming route from the user
-        path = (
+        raw_path = (
             environ.get("HTTP_X_MATCHED_PATH")
             or environ.get("HTTP_X_FORWARDED_PATH")
             or environ.get("HTTP_X_ORIGINAL_URI")
+            or environ.get("RAW_URI")
             or environ.get("PATH_INFO", "")
         )
+        
+        raw_path = raw_path.split("?")[0]
 
-        # 2. Strip query strings (e.g., /history?page=2 -> /history)
-        path = path.split("?")[0]
-
-        # 3. Strip internal Vercel serverless prefixes only if fallback was used
         for prefix in ("/api/index.py", "/api/index", "/api", "/app.py", "/app"):
-            if path.startswith(prefix):
-                path = path[len(prefix):] or "/"
+            if raw_path.startswith(prefix):
+                raw_path = raw_path[len(prefix):] or "/"
                 break
 
-        if not path.startswith("/"):
-            path = "/" + path
+        if not raw_path.startswith("/"):
+            raw_path = "/" + raw_path
 
-        environ["PATH_INFO"] = path
+        environ["PATH_INFO"] = raw_path
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
@@ -58,6 +56,7 @@ app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-insecure-key-change-me"
 )
+app.config["WTF_CSRF_ENABLED"] = False  # Allows standard form submission
 
 # Set writable SQLite path in /tmp for Vercel Serverless
 if os.environ.get("VERCEL") or not os.access(".", os.W_OK):
@@ -237,7 +236,7 @@ def evaluate_vt_result(vt_data: dict):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    if form.validate_on_submit():
+    if request.method == "POST":
         return redirect(url_for("scan"))
     return render_template("index.html", form=form)
 
@@ -257,8 +256,8 @@ def scan():
     malicious = suspicious = harmless = 0
     vendors = {}
 
-    if form.validate_on_submit():
-        raw_url = form.url.data.strip()
+    if request.method == "POST":
+        raw_url = request.form.get("url", "").strip() or (form.url.data.strip() if form.url.data else "")
         is_valid, validated_url = validate_url(raw_url)
 
         if is_valid:
@@ -318,8 +317,8 @@ def batch_scan():
     form = BatchScanForm()
     results = []
 
-    if form.validate_on_submit():
-        raw_text = form.urls.data or ""
+    if request.method == "POST":
+        raw_text = request.form.get("urls", "") or form.urls.data or ""
         urls = [u.strip() for u in raw_text.splitlines() if u.strip()]
 
         for u in urls[:25]:
